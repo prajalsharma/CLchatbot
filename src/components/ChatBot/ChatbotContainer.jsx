@@ -37,10 +37,10 @@ export default function ChatbotContainer() {
 
     try {
       let matchedGrants = [];
-      // 👇 Only run matchGrants if we are *not* mid-questionnaire
-      const isGrantQuery = /grant|fund|apply|zk|ecosystem|project/i.test(prompt.toLowerCase());
+      const isGrantQuery = /grant|fund|apply|zk|ecosystem|project|socialfi|ai/i.test(
+        prompt.toLowerCase()
+      );
 
-      // Detect if we're mid-questionnaire based on assistant messages asking questions
       const isQuestionnaireRunning = messages.some(
         (m) =>
           m.role === "assistant" &&
@@ -58,22 +58,19 @@ export default function ChatbotContainer() {
       );
 
       // 🧠 Only run grant matching if we're NOT in questionnaire and it's not running
+
       if (isGrantQuery && !isQuestionnaireRunning && isQuestionnaireComplete) {
         matchedGrants = await matchGrants(prompt);
       }
 
       const { reply } = await getChatGPTExplanation(sessionId, prompt, matchedGrants);
 
-      // If grant-related and actual matches were found, render grant cards
       if (isGrantQuery && matchedGrants?.length) {
         setMessages((prev) => [
           ...prev,
           { role: "assistant", type: "grants", grants: matchedGrants },
         ]);
-      }
-
-      // Always show text reply from assistant
-      if (reply && typeof reply === "string" && reply.trim() !== "") {
+      } else if (reply && typeof reply === "string" && reply.trim() !== "") {
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: reply.trim(), type: "text" },
@@ -134,7 +131,7 @@ export default function ChatbotContainer() {
             </h2>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-none">
             {messages.map((msg, idx) => {
               if (msg.type === "grants") {
                 return msg.grants.map((grant, i) => (
@@ -163,29 +160,88 @@ export default function ChatbotContainer() {
                 ));
               }
 
-              return (
-                <div
-                  key={idx}
-                  className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
+              if (msg.type === "text") {
+                const structuredGrants = msg.content
+                  ?.split(/\n+/)
+                  .map((line) => {
+                    const match = line.match(
+                      /\*\*(.*?) Grants?\*\*.*?- Website:.*?\((https?:\/\/.*?)\)/
+                    );
+                    if (!match) return null;
+                    return {
+                      grantProgramName: match[1].trim(),
+                      description: line.replace(/\*\*.*?\*\*.*?- Website:.*/, "").trim(),
+                      website: match[2].trim(),
+                    };
+                  })
+                  .filter(Boolean);
+
+                if (structuredGrants.length > 0) {
+                  return structuredGrants.map((grant, i) => (
+                    <div key={`${idx}-${i}`} className="p-4 bg-white border rounded shadow-sm">
+                      <h3 className="font-bold text-lg">{grant.grantProgramName}</h3>
+                      <p>
+                        <strong>Description:</strong> {grant.description}
+                      </p>
+                      <a
+                        href={grant.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline">
+                        Website
+                      </a>
+                    </div>
+                  ));
+                }
+
+                const hasPriorGrants = messages.some((m, i) => i < idx && m.type === "grants");
+
+                if (hasPriorGrants) return null;
+
+                return (
                   <div
-                    className={`inline-block px-3 py-2 rounded-lg ${
-                      msg.role === "user" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-900"
-                    }`}>
-                    {msg.content}
+                    key={idx}
+                    className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                    <div
+                      className={`inline-block px-3 py-2 rounded-xl shadow-lg ${
+                        msg.role === "user"
+                          ? "bg-[#3D5A99] text-white rounded-tr-none"
+                          : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"
+                      }`}>
+                      {msg.content}
+                    </div>
                   </div>
-                </div>
-              );
+                );
+              }
             })}
+
+            {isLoading && (
+              <div className="text-left text-sm">
+                <div className="inline-block px-3 py-4 rounded-xl shadow-lg bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none animate-pulse">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce" />
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div ref={chatEndRef} />
           </div>
 
           <div className="p-4 border-t border-[#1F2A50] flex gap-2">
             <Textarea
-              className="flex-1 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none h-12"
-              placeholder="Type here..."
+              className="flex-1 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none"
+              placeholder="Ask about grants..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
             />
             <Button
               onClick={handleSend}
