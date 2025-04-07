@@ -1,0 +1,2464 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.jpeg" type="image/x-icon" />
+    <meta property="og:title" content="Web3 Grants - Discover & Apply for Grants" />
+<meta property="og:title" content="Web3 Grants Dashboard" />
+<meta property="og:description" content="Discover, track, and apply for Web3 grants using our interactive dashboard." />
+<meta property="og:image" content="https://web3grants.s3.us-east-1.amazonaws.com/preview" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.web3grants.co" />
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@YourTwitterHandle"> <!-- Optional but useful -->
+<meta name="twitter:title" content="CL Web3 Grants Dashboard">
+<meta name="twitter:description" content="Easily find, match, and analyze Web3 grants with the CL Web3 Grants Dashboard—your go-to tool for Web3 funding.">
+<meta name="twitter:image" content="https://web3grants.s3.us-east-1.amazonaws.com/preview">
+
+
+    <title>CL Web3 Grants Database</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-SR2EHKZMJQ"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SR2EHKZMJQ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-SR2EHKZMJQ');
+</script> 
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: ["class"],
+  content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
+  theme: {
+    extend: {
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      colors: {
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))",
+        },
+      },
+      screens: {
+        "3xl": "1900px",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate"), require("tailwind-scrollbar")({ nocompatible: true })],
+};
+import path from "path";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { config } from 'dotenv';
+
+config();
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  define: {
+    'process.env': process.env
+  }
+});
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+{
+  "name": "web3-grants",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.1.1",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.5",
+    "@radix-ui/react-scroll-area": "^1.2.2",
+    "@radix-ui/react-separator": "^1.1.1",
+    "@radix-ui/react-slot": "^1.1.1",
+    "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
+    "@tensorflow/tfjs": "^3.21.0",
+    "@tensorflow/tfjs-converter": "^3.21.0",
+    "@tensorflow/tfjs-core": "^3.21.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.0.0",
+    "dotenv": "^16.4.7",
+    "lucide-react": "^0.474.0",
+    "openai": "^4.91.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.0",
+    "tailwind-scrollbar": "^3.1.0",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.0.5"
+  }
+}
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": false,
+  "tsx": false,
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "src/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
+}import js from '@eslint/js'
+import globals from 'globals'
+import react from 'eslint-plugin-react'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+
+export default [
+  { ignores: ['dist'] },
+  {
+    files: ['**/*.{js,jsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    settings: { react: { version: '18.3' } },
+    plugins: {
+      react,
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...react.configs.recommended.rules,
+      ...react.configs['jsx-runtime'].rules,
+      ...reactHooks.configs.recommended.rules,
+      'react/jsx-no-target-blank': 'off',
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+    },
+  },
+]
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+interface ImportMetaEnv {
+    readonly VITE_OPENAI_KEY: string;
+  }
+  
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+  import '@tensorflow/tfjs-backend-webgl';
+import * as tf from '@tensorflow/tfjs';
+import * as use from '@tensorflow-models/universal-sentence-encoder';
+import OpenAI from 'openai';
+import grants from '../data/grants.json';
+
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_KEY,
+  dangerouslyAllowBrowser: true,
+});
+
+let model: use.UniversalSentenceEncoder | null = null;
+
+export async function initModel() {
+  if (!model) {
+    await tf.setBackend('webgl');
+    await tf.ready();
+    model = await use.load();
+  }
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
+  const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+  const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+  return dot / (magA * magB);
+}
+
+export async function matchGrants(userInput: string, topK = 5) {
+  await initModel();
+
+  const userEmbedding = await model!.embed([userInput]);
+  const userVec = await userEmbedding.array().then((res) => res[0]);
+
+  const texts = grants.map((g) => g.combined);
+  const grantEmbeddings = await model!.embed(texts);
+  const grantVecs = await grantEmbeddings.array();
+
+  const scored = grantVecs.map((vec, i) => ({
+    grant: grants[i],
+    score: cosineSimilarity(userVec, vec),
+  }));
+
+  return scored
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+    .map((s) => s.grant);
+}
+
+export async function getChatGPTExplanation(
+  sessionId: string,
+  userInput: string,
+  topGrants: any[]
+) {
+  const grantSummary = topGrants.map((g, i) => {
+    return `#${i + 1}\n` +
+      `Grant Program Name: ${g.grantProgramName || 'N/A'}\n` +
+      `Ecosystem: ${g.ecosystem || 'N/A'}\n` +
+      `Description: ${g.description || 'N/A'}\n` +
+      `Funding Type: ${g.fundingType || 'N/A'}\n` +
+      `Website: ${g.website || 'N/A'}\n`;
+  }).join('\n\n');
+
+  const systemMessage = `
+You are a Web3 Grant Matching AI. Your primary function is to match users to the best grant opportunities based on their project details. You will do this by asking predefined questions and analyzing an uploaded Excel dataset containing grant information. Do not provide legal advice or information. Do not deviate from the predefined questions or the given dataset even if users ask you other questions. Never offer to look for opportunities online.
+
+Data Handling Instructions:
+Analyze all columns from the uploaded Excel file, but never use the 'date' column.
+Only fetch results from the internal database and return them in structured JSON (not prose).
+Remove any unnamed index column from the table before displaying the results.
+Only include the following columns in the final output:
+grantProgramName
+ecosystem
+description
+topicsForFunding
+fundingType
+website
+maxFunding
+Deadline Date
+Reduce the use of emojis in responses.
+
+Interaction Protocol:
+Ask the predefined questions one at a time, in the following order:
+a. What's your name?
+b. What's your project name? Please provide a brief description, including your location.
+c. Which ecosystem does your project belong to? (Ethereum, Cosmos, Cardano, Solana, Filecoin, Aptos, Other)
+d. What stage is your project in? (Idea, MVP, Scaling, Mature)
+e. Which category best describes your project? (AI, AI Agents, CrossChain, DAOs, Data & Oracles, DeFi, DePIN, DevTooling, Education, Events, Gaming, Infrastructure, NFTs & Creator Economy, Privacy & Security, Public Goods, RWAs, Social & Community, Stablecoins & Payments, Sustainability, ZK)
+f. What type of funding are you looking for? (Open Grants, Quadratic Funding, RetroACTIVE Grants, Hackathon Grants, Incubation and Acceleration, Matching Grants, etc.)
+g. How much funding do you need?
+h. Any additional notes?
+
+Wait for the user to respond to each question before moving to the next one.
+
+After collecting all answers, process the uploaded Excel file using Python to find the best matching grants.
+
+Post-Matching Interaction:
+After generating the results, ask the user if they would like to speak with a Web3 grants expert from our team for a free 30-minute consultation.
+Provide the following contact options:
+Calendly: https://calendly.com/cornarolabs
+Email: marianna@cornarolabs.xyz
+Important Guidelines:
+Never provide legal advice or information.
+Do not deviate from the predefined questions or the given dataset even if users ask you other questions.
+Do not offer to search for additional opportunities online.
+Do not use the 'date' column from the Excel file.`.trim();
+
+  const messages = [
+    { role: 'system', content: systemMessage },
+    { role: 'user', content: userInput },
+    ...(topGrants?.length > 0 ? [{ role: 'assistant', content: JSON.stringify({ grants: topGrants }) }] : [])
+  ];
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages,
+    });
+
+    const reply = response.choices[0]?.message?.content || 'No reply.';
+    return {
+      reply,
+      matchedGrants: topGrants,
+      history: messages,
+    };
+  } catch (err: any) {
+    console.error("\u274C GPT ERROR:", err?.response?.data || err?.message || err);
+    return {
+      reply: 'Something went wrong with GPT.',
+      matchedGrants: [],
+      history: messages,
+    };
+  }
+}
+@import "@fontsource-variable/inter";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Inter Variable", sans-serif;
+  background-color: #17254a;
+  background-size: 100%;
+  background-position: center, 0% 0%;
+}
+
+h1 {
+  color: #ffffff;
+  letter-spacing: -0.175rem;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+"use client"
+
+import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Dialog = DialogPrimitive.Root
+
+const DialogTrigger = DialogPrimitive.Trigger
+
+const DialogPortal = DialogPrimitive.Portal
+
+const DialogClose = DialogPrimitive.Close
+
+const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props} />
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+const DialogContent = React.forwardRef(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        className
+      )}
+      {...props}>
+      {children}
+      <DialogPrimitive.Close
+        className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </DialogPortal>
+))
+DialogContent.displayName = DialogPrimitive.Content.displayName
+
+const DialogHeader = ({
+  className,
+  ...props
+}) => (
+  <div
+    className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)}
+    {...props} />
+)
+DialogHeader.displayName = "DialogHeader"
+
+const DialogFooter = ({
+  className,
+  ...props
+}) => (
+  <div
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
+    {...props} />
+)
+DialogFooter.displayName = "DialogFooter"
+
+const DialogTitle = React.forwardRef(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    {...props} />
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+
+const DialogDescription = React.forwardRef(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props} />
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+}
+import * as React from "react"
+import { Command as CommandPrimitive } from "cmdk"
+import { Search } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+
+const Command = React.forwardRef(({ className, ...props }, ref) => (
+  <CommandPrimitive
+    ref={ref}
+    className={cn(
+      "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
+      className
+    )}
+    {...props} />
+))
+Command.displayName = CommandPrimitive.displayName
+
+const CommandDialog = ({
+  children,
+  ...props
+}) => {
+  return (
+    (<Dialog {...props}>
+      <DialogContent className="overflow-hidden p-0 shadow-lg">
+        <Command
+          className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+          {children}
+        </Command>
+      </DialogContent>
+    </Dialog>)
+  );
+}
+
+const CommandInput = React.forwardRef(({ className, ...props }, ref) => (
+  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    <CommandPrimitive.Input
+      ref={ref}
+      className={cn(
+        "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      {...props} />
+  </div>
+))
+
+CommandInput.displayName = CommandPrimitive.Input.displayName
+
+const CommandList = React.forwardRef(({ className, ...props }, ref) => (
+  <CommandPrimitive.List
+    ref={ref}
+    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
+    {...props} />
+))
+
+CommandList.displayName = CommandPrimitive.List.displayName
+
+const CommandEmpty = React.forwardRef((props, ref) => (
+  <CommandPrimitive.Empty ref={ref} className="py-6 text-center text-sm" {...props} />
+))
+
+CommandEmpty.displayName = CommandPrimitive.Empty.displayName
+
+const CommandGroup = React.forwardRef(({ className, ...props }, ref) => (
+  <CommandPrimitive.Group
+    ref={ref}
+    className={cn(
+      "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
+      className
+    )}
+    {...props} />
+))
+
+CommandGroup.displayName = CommandPrimitive.Group.displayName
+
+const CommandSeparator = React.forwardRef(({ className, ...props }, ref) => (
+  <CommandPrimitive.Separator ref={ref} className={cn("-mx-1 h-px bg-border", className)} {...props} />
+))
+CommandSeparator.displayName = CommandPrimitive.Separator.displayName
+
+const CommandItem = React.forwardRef(({ className, ...props }, ref) => (
+  <CommandPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      className
+    )}
+    {...props} />
+))
+
+CommandItem.displayName = CommandPrimitive.Item.displayName
+
+const CommandShortcut = ({
+  className,
+  ...props
+}) => {
+  return (
+    (<span
+      className={cn("ml-auto text-xs tracking-widest text-muted-foreground", className)}
+      {...props} />)
+  );
+}
+CommandShortcut.displayName = "CommandShortcut"
+
+export {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+  CommandSeparator,
+}
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Input = React.forwardRef(({ className, type, ...props }, ref) => {
+  return (
+    (<input
+      type={type}
+      className={cn(
+        "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        className
+      )}
+      ref={ref}
+      {...props} />)
+  );
+})
+Input.displayName = "Input"
+
+export { Input }
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Textarea = React.forwardRef(({ className, ...props }, ref) => {
+  return (
+    (<textarea
+      className={cn(
+        "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        className
+      )}
+      ref={ref}
+      {...props} />)
+  );
+})
+Textarea.displayName = "Textarea"
+
+export { Textarea }
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva } from "class-variance-authority";
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : "button"
+  return (
+    (<Comp
+      className={cn(buttonVariants({ variant, size, className }))}
+      ref={ref}
+      {...props} />)
+  );
+})
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+import * as React from "react";
+import * as SeparatorPrimitive from "@radix-ui/react-separator";
+
+import { cn } from "@/lib/utils";
+
+const Separator = React.forwardRef(
+  ({ className, orientation = "horizontal", decorative = true, ...props }, ref) => (
+    <SeparatorPrimitive.Root
+      ref={ref}
+      decorative={decorative}
+      orientation={orientation}
+      className={cn(
+        "shrink-0 bg-border",
+        orientation === "horizontal" ? "h-[1px] w-full" : "min-h-full w-[1px]",
+        className
+      )}
+      {...props}
+    />
+  )
+);
+Separator.displayName = SeparatorPrimitive.Root.displayName;
+
+export { Separator };
+import * as React from "react"
+import { cva } from "class-variance-authority";
+
+import { cn } from "@/lib/utils"
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+function Badge({
+  className,
+  variant,
+  ...props
+}) {
+  return (<div className={cn(badgeVariants({ variant }), className)} {...props} />);
+}
+
+export { Badge, badgeVariants }
+import * as React from "react";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
+
+import { cn } from "@/lib/utils";
+
+const Popover = PopoverPrimitive.Root;
+
+const PopoverTrigger = PopoverPrimitive.Trigger;
+
+const PopoverContent = React.forwardRef(
+  ({ className, align = "center", side = "bottom", sideOffset = 4, ...props }, ref) => (
+    <PopoverPrimitive.Portal>
+      <PopoverPrimitive.Content
+        ref={ref}
+        align={align}
+        side={side}
+        sideOffset={sideOffset}
+        avoidCollisions={true}
+        className={cn(
+          "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ml-2",
+          className
+        )}
+        {...props}
+      />
+    </PopoverPrimitive.Portal>
+  )
+);
+PopoverContent.displayName = PopoverPrimitive.Content.displayName;
+
+export { Popover, PopoverTrigger, PopoverContent };
+import * as React from "react"
+import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
+
+import { cn } from "@/lib/utils"
+
+const ScrollArea = React.forwardRef(({ className, children, ...props }, ref) => (
+  <ScrollAreaPrimitive.Root
+    ref={ref}
+    className={cn("relative overflow-hidden", className)}
+    {...props}>
+    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+      {children}
+    </ScrollAreaPrimitive.Viewport>
+    <ScrollBar />
+    <ScrollAreaPrimitive.Corner />
+  </ScrollAreaPrimitive.Root>
+))
+ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName
+
+const ScrollBar = React.forwardRef(({ className, orientation = "vertical", ...props }, ref) => (
+  <ScrollAreaPrimitive.ScrollAreaScrollbar
+    ref={ref}
+    orientation={orientation}
+    className={cn(
+      "flex touch-none select-none transition-colors",
+      orientation === "vertical" &&
+        "h-full w-2.5 border-l border-l-transparent p-[1px]",
+      orientation === "horizontal" &&
+        "h-2.5 flex-col border-t border-t-transparent p-[1px]",
+      className
+    )}
+    {...props}>
+    <ScrollAreaPrimitive.ScrollAreaThumb className="relative flex-1 rounded-full bg-border" />
+  </ScrollAreaPrimitive.ScrollAreaScrollbar>
+))
+ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName
+
+export { ScrollArea, ScrollBar }
+import * as React from "react"
+import * as SheetPrimitive from "@radix-ui/react-dialog"
+import { cva } from "class-variance-authority";
+import { X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Sheet = SheetPrimitive.Root
+
+const SheetTrigger = SheetPrimitive.Trigger
+
+const SheetClose = SheetPrimitive.Close
+
+const SheetPortal = SheetPrimitive.Portal
+
+const SheetOverlay = React.forwardRef(({ className, ...props }, ref) => (
+  <SheetPrimitive.Overlay
+    className={cn(
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+    ref={ref} />
+))
+SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
+
+const sheetVariants = cva(
+  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  {
+    variants: {
+      side: {
+        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        bottom:
+          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+        right:
+          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+      },
+    },
+    defaultVariants: {
+      side: "right",
+    },
+  }
+)
+
+const SheetContent = React.forwardRef(({ side = "right", className, children, ...props }, ref) => (
+  <SheetPortal>
+    <SheetOverlay />
+    <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
+      {children}
+      <SheetPrimitive.Close
+        className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </SheetPrimitive.Close>
+    </SheetPrimitive.Content>
+  </SheetPortal>
+))
+SheetContent.displayName = SheetPrimitive.Content.displayName
+
+const SheetHeader = ({
+  className,
+  ...props
+}) => (
+  <div
+    className={cn("flex flex-col space-y-2 text-center sm:text-left", className)}
+    {...props} />
+)
+SheetHeader.displayName = "SheetHeader"
+
+const SheetFooter = ({
+  className,
+  ...props
+}) => (
+  <div
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
+    {...props} />
+)
+SheetFooter.displayName = "SheetFooter"
+
+const SheetTitle = React.forwardRef(({ className, ...props }, ref) => (
+  <SheetPrimitive.Title
+    ref={ref}
+    className={cn("text-lg font-semibold text-foreground", className)}
+    {...props} />
+))
+SheetTitle.displayName = SheetPrimitive.Title.displayName
+
+const SheetDescription = React.forwardRef(({ className, ...props }, ref) => (
+  <SheetPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props} />
+))
+SheetDescription.displayName = SheetPrimitive.Description.displayName
+
+export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+}
+import React, { useEffect, useState } from "react";
+import { Input } from "./ui/input";
+import { EcosystemDropdown } from "./EcosystemDropdown";
+import GrantCard from "./GrantCard";
+import { StatusDropdown } from "./StatusDropdown";
+import { FundingTopicsDropdown } from "./FundingTopicsDropdown";
+import { FundingTypeDropdown } from "./FundingTypeDropdown";
+import { Button } from "./ui/button";
+import { RotateCcw } from "lucide-react";
+
+const API_KEY = import.meta.env.VITE_API_KEY;
+const SHEET_ID = import.meta.env.VITE_SHEET_ID;
+const RANGE = import.meta.env.VITE_RANGE;
+
+const Board = () => {
+  const [selectedEcosystems, setSelectedEcosystems] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [selectedFundingTopics, setSelectedFundingTopics] = useState([]);
+  const [selectedFundingTypes, setSelectedFundingTypes] = useState([]);
+  const [selectedSortBy, setSelectedSortBy] = useState([]);
+  const [grantPrograms, setGrantPrograms] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const grantsPerPage = 20;
+
+  const fetchGrants = async () => {
+    try {
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
+      const data = await response.json();
+
+      if (data.values && data.values.length > 1) {
+        const headers = data.values[0];
+        const formattedData = data.values.slice(1).map((row) => {
+          const grant = headers.reduce((acc, header, index) => {
+            acc[header] = row[index] || "";
+            return acc;
+          }, {});
+
+          return {
+            ...grant,
+            id: crypto.randomUUID(),
+
+            // constructed new fields in the object for search purposes
+            searchFundingTopics: grant.fundingTopics
+              ? grant.fundingTopics.toLowerCase().replace(/\s+/g, "").split(",")
+              : [],
+
+            searchFundingType: grant.fundingType
+              ? grant.fundingType.toLowerCase().replace(/\s+/g, "")
+              : "",
+          };
+        });
+
+        setGrantPrograms(formattedData);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGrants();
+  }, []);
+
+  const filteredAndSortedGrants = React.useMemo(() => {
+    let filtered = grantPrograms.filter((grant) => {
+      return (
+        (selectedEcosystems.length === 0 || selectedEcosystems.includes(grant.ecosystem)) &&
+        (selectedStatuses.length === 0 || selectedStatuses.includes(grant.status)) &&
+        (selectedFundingTopics.length === 0 ||
+          grant.searchFundingTopics.some((topic) =>
+            selectedFundingTopics.map((t) => t.toLowerCase().replace(/\s+/g, "")).includes(topic)
+          )) &&
+        (selectedFundingTypes.length === 0 ||
+          selectedFundingTypes
+            .map((t) => t.toLowerCase().replace(/\s+/g, ""))
+            .includes(grant.searchFundingType)) &&
+        (!searchQuery ||
+          [
+            grant.grantProgramName,
+            grant.description,
+            grant.topicsForFunding,
+            grant.fundingTopics,
+            grant.fundingType,
+          ]
+            .filter(Boolean) // filters undefined/null values
+            .some(
+              (field) =>
+                field.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                // for variation searching
+                new RegExp(`\\b${searchQuery}`, "i").test(field)
+            ))
+      );
+    });
+
+    if (selectedSortBy.includes("mostRecent")) {
+      filtered = [...filtered].sort((a, b) => {
+        const dateA = a.date ? new Date(a.date + "-01") : new Date(0);
+        const dateB = b.date ? new Date(b.date + "-01") : new Date(0);
+        return dateB - dateA;
+      });
+    }
+
+    // highest first
+    if (selectedSortBy.includes("funding")) {
+      filtered = [...filtered].sort((a, b) => {
+        const totalA = a.total ? Number(a.total.replace(/[$,]/g, "")) : 0;
+
+        const totalB = b.total ? Number(b.total.replace(/[$,]/g, "")) : 0;
+
+        return totalB - totalA;
+      });
+    }
+
+    return filtered;
+  }, [
+    grantPrograms,
+    selectedEcosystems,
+    selectedStatuses,
+    selectedFundingTopics,
+    selectedFundingTypes,
+    selectedSortBy,
+    searchQuery,
+  ]);
+
+  const paginatedGrants = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * grantsPerPage;
+    const endIndex = startIndex + grantsPerPage;
+    return filteredAndSortedGrants.slice(startIndex, endIndex);
+  }, [filteredAndSortedGrants, currentPage]);
+
+  const totalPages = Math.ceil(filteredAndSortedGrants.length / grantsPerPage);
+
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>;
+  }
+
+  return (
+    <div>
+      <div className="my-5 flex flex-col gap-4 p-5 rounded-lg justify-center backdrop-blur bg-white/5">
+        <Input
+          placeholder="Search Grants..."
+          className="bg-[#151226]/50 border-[#151226] text-white"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+
+        <div className="flex flex-col gap-4 md:flex-row">
+          <EcosystemDropdown
+            selectedValues={selectedEcosystems}
+            setSelectedValues={setSelectedEcosystems}
+          />
+          <StatusDropdown
+            selectedValues={selectedStatuses}
+            setSelectedValues={setSelectedStatuses}
+          />
+          <FundingTopicsDropdown
+            selectedValues={selectedFundingTopics}
+            setSelectedValues={setSelectedFundingTopics}
+          />
+          <FundingTypeDropdown
+            selectedValues={selectedFundingTypes}
+            setSelectedValues={setSelectedFundingTypes}
+          />
+        </div>
+
+        <div className="flex justify-between items-center flex-wrap gap-3">
+          <div className="ml-2 flex gap-3 items-center flex-wrap">
+            <h3 className="font-semibold text-white">Sort By:</h3>
+            {["funding"].map((criteria) => (
+              <Button
+                key={criteria}
+                className={`h-auto bg-[#151226]/70 text-white hover:bg-[#151226] ${
+                  selectedSortBy.includes(criteria) && "bg-[#00bbfc] hover:bg-[#00bbfc]/50"
+                }`}
+                onClick={() =>
+                  setSelectedSortBy((prev) => {
+                    if (prev.includes(criteria)) {
+                      return prev.filter((item) => item !== criteria);
+                    }
+
+                    return [...prev, criteria];
+                  })
+                }>
+                {criteria === "mostRecent" ? "Most Recent" : "Funding"}
+              </Button>
+            ))}
+          </div>
+          <Button
+            className="bg-[#151226]/70 h-auto hover:bg-[#151226]"
+            onClick={() => {
+              setSelectedEcosystems([]);
+              setSelectedStatuses([]);
+              setSelectedFundingTopics([]);
+              setSelectedFundingTypes([]);
+              setSelectedSortBy([]);
+              setSearchQuery("");
+            }}>
+            <RotateCcw />
+            Reset Filters
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        {isLoading ? (
+          <div className="text-center">Loading...</div>
+        ) : paginatedGrants.length === 0 ? (
+          <div className="text-center text-white text-xl py-6">No grants found.</div>
+        ) : (
+          paginatedGrants.map((grant) => <GrantCard key={grant.id} grant={grant} />)
+        )}
+      </div>
+      <div className="flex justify-center items-center gap-4 mt-4">
+        <button
+          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
+          onClick={() => {
+            setCurrentPage(1);
+            window.scrollTo({ top: 100 });
+          }}
+          disabled={currentPage === 1}>
+          First
+        </button>
+
+        <button
+          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
+          onClick={() => {
+            setCurrentPage((prev) => Math.max(prev - 1, 1));
+            window.scrollTo({ top: 100 });
+          }}
+          disabled={currentPage === 1}>
+          Previous
+        </button>
+        <span className="text-white bg-[#151226] rounded px-4 py-2">{currentPage}</span>
+        <button
+          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
+          onClick={() => {
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+            window.scrollTo({ top: 100 });
+          }}
+          disabled={currentPage === totalPages}>
+          Next
+        </button>
+        <button
+          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
+          onClick={() => {
+            setCurrentPage(totalPages);
+            window.scrollTo({ top: 100 });
+          }}
+          disabled={currentPage === totalPages}>
+          Last
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Board;
+import React, { useState, useEffect, useRef } from "react";
+import { matchGrants, getChatGPTExplanation } from "@/utils/grantmatcher";
+import { Textarea } from "../ui/textarea";
+import { Button } from "../ui/button";
+import { RotateCcw, Send } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+
+export default function ChatbotContainer() {
+  const sessionId = localStorage.getItem("sessionId") || crypto.randomUUID();
+  localStorage.setItem("sessionId", sessionId);
+
+  const [prompt, setPrompt] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const chatEndRef = useRef(null);
+
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState({
+    name: "",
+    project: "",
+    ecosystem: "",
+    stage: "",
+    category: "",
+    fundingType: "",
+    fundingAmount: "",
+    notes: "",
+  });
+
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!prompt.trim()) return;
+
+    const userMessage = {
+      role: "user",
+      content: prompt.trim(),
+      type: "text",
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setPrompt("");
+    setIsLoading(true);
+
+    try {
+      let matchedGrants = [];
+      const isGrantQuery = /grant|fund|apply|zk|ecosystem|project|socialfi|ai/i.test(
+        prompt.toLowerCase()
+      );
+
+      const isQuestionnaireRunning = messages.some(
+        (m) =>
+          m.role === "assistant" &&
+          /(what(?:'s| is) your name|project|ecosystem|stage|category|funding|notes)/i.test(
+            m.content
+          )
+      );
+
+      const isQuestionnaireComplete = Object.values(questionnaireAnswers).every(
+        (v) => v.trim() !== ""
+      );
+
+      if (isGrantQuery && !isQuestionnaireRunning && isQuestionnaireComplete) {
+        const combinedPrompt = Object.entries(questionnaireAnswers)
+          .map(([key, val]) => `${key}: ${val}`)
+          .join("\n");
+        matchedGrants = await matchGrants(combinedPrompt);
+      }
+
+      const { reply } = await getChatGPTExplanation(sessionId, prompt, matchedGrants);
+
+      // Auto-update answers if relevant
+      if (/what(?:'s| is) your name/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, name: prompt.trim() }));
+      } else if (/project name|brief description/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, project: prompt.trim() }));
+      } else if (/ecosystem/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, ecosystem: prompt.trim() }));
+      } else if (/stage/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, stage: prompt.trim() }));
+      } else if (/category/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, category: prompt.trim() }));
+      } else if (/type of funding/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, fundingType: prompt.trim() }));
+      } else if (/how much funding/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, fundingAmount: prompt.trim() }));
+      } else if (/additional notes/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, notes: prompt.trim() }));
+      }
+
+      if (isGrantQuery && matchedGrants?.length) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", type: "grants", grants: matchedGrants },
+        ]);
+      } else if (reply && typeof reply === "string" && reply.trim() !== "") {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: reply.trim(), type: "text" },
+        ]);
+      }
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Something went wrong with GPT.",
+          type: "text",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-[#121C38] text-white p-6 rounded-xl shadow-lg border border-[#1F2A50] w-full lg:max-w-sm lg:sticky lg:top-20">
+      <h2 className="text-xl font-bold text-[#EAEAEA]">AI Grant Matcher Tool</h2>
+      <p className="text-sm text-[#A1B1E1] mt-2">
+        Our AI assistant will match your project with the ideal grant opportunity.
+      </p>
+
+      <Textarea
+        className="mt-4 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none h-24"
+        placeholder="Describe your project..."
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleSend();
+            setIsOpen(true);
+          }
+        }}
+      />
+
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            onClick={() => {
+              handleSend();
+              setIsOpen(true);
+            }}
+            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all">
+            Find Grants
+          </Button>
+        </SheetTrigger>
+
+        <SheetContent className="w-full sm:max-w-[480px] p-0 bg-[#121C38] text-white border-l border-[#1F2A50] flex flex-col">
+          <div className="p-4 flex justify-between items-center border-b border-[#1F2A50]">
+            <h2 className="text-lg font-semibold text-[#EAEAEA]">
+              <img src="./logo.png" className="w-44" alt="" />
+            </h2>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-none">
+            {messages.map((msg, idx) => {
+              if (msg.type === "grants") {
+                return msg.grants.map((grant, i) => (
+                  <div key={`${idx}-${i}`} className="p-4 bg-white border rounded shadow-sm">
+                    <h3 className="font-bold text-lg">{grant.grantProgramName}</h3>
+                    <p><strong>Ecosystem:</strong> {grant.ecosystem}</p>
+                    <p><strong>Description:</strong> {grant.description}</p>
+                    <p><strong>Funding Type:</strong> {grant.fundingType}</p>
+                    <p><strong>Max Funding:</strong> {grant.maxFunding}</p>
+                    <a href={grant.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Website</a>
+                  </div>
+                ));
+              }
+
+              if (msg.type === "text") {
+                return (
+                  <div key={idx} className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                    <div className={`inline-block px-3 py-2 rounded-xl shadow-lg ${msg.role === "user" ? "bg-[#3D5A99] text-white rounded-tr-none" : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"}`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                );
+              }
+            })}
+
+            {isLoading && (
+              <div className="text-left text-sm">
+                <div className="inline-block px-3 py-4 rounded-xl shadow-lg bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none animate-pulse">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce" />
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div ref={chatEndRef} />
+          </div>
+
+          <div className="p-4 border-t border-[#1F2A50] flex gap-2">
+            <Textarea
+              className="flex-1 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none"
+              placeholder="Ask about grants..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+            />
+            <Button
+              onClick={handleSend}
+              disabled={isLoading}
+              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-white hover:text-[#3D5A99] transition-all [&_svg]:size-5 flex items-center justify-center">
+              {isLoading ? (
+                <RotateCcw className="animate-[spin_1s_linear_infinite_reverse]" />
+              ) : (
+                <Send />
+              )}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+import { useState, useEffect } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "./ui/scroll-area";
+import { ecosystems } from "@/data/filterOptions";
+
+export function EcosystemDropdown({ selectedValues, setSelectedValues }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setSelectedValues(selectedValues);
+  }, [selectedValues, setSelectedValues]);
+
+  const handleSelect = (currentValue) => {
+    if (currentValue === "all") {
+      setSelectedValues(
+        selectedValues.length === ecosystems.length ? [] : ecosystems.map((b) => b.value)
+      );
+    } else {
+      setSelectedValues((current) =>
+        current.includes(currentValue)
+          ? current.filter((value) => value !== currentValue)
+          : [...current, currentValue]
+      );
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="justify-between bg-[#151226]/70 text-white hover:bg-[#151226] hover:text-white border-[#151226]">
+          <span>Ecosystem {selectedValues?.length > 0 && `(${selectedValues.length})`}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 bg-[#151226]">
+        <Command className="bg-[#151226] text-white">
+          <CommandInput placeholder="Search" />
+          <CommandList>
+            <CommandEmpty>No Ecosystem found.</CommandEmpty>
+            <ScrollArea className="h-[200px]">
+              <CommandGroup className="text-white border-none">
+                <CommandItem onSelect={() => handleSelect("all")} className="cursor-pointer mr-2">
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedValues?.length === ecosystems.length ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  Select All
+                </CommandItem>
+                {ecosystems.map((ecosystem) => (
+                  <CommandItem
+                    key={ecosystem.value}
+                    onSelect={() => handleSelect(ecosystem.value)}
+                    className="cursor-pointer mr-2">
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedValues?.includes(ecosystem.value) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {ecosystem.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </ScrollArea>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+import { useState, useEffect } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "./ui/scroll-area";
+import { fundingTypes } from "@/data/filterOptions";
+
+export function FundingTypeDropdown({ selectedValues, setSelectedValues }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setSelectedValues(selectedValues);
+  }, [selectedValues]);
+
+  const handleSelect = (currentValue) => {
+    if (currentValue === "all") {
+      setSelectedValues(
+        selectedValues.length === fundingTypes.length ? [] : fundingTypes.map((b) => b.value)
+      );
+    } else {
+      setSelectedValues((current) =>
+        current.includes(currentValue)
+          ? current.filter((value) => value !== currentValue)
+          : [...current, currentValue]
+      );
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="justify-between bg-[#151226]/70 text-white hover:bg-[#151226] hover:text-white border-[#151226]">
+          <span>Funding Types {selectedValues?.length > 0 && `(${selectedValues.length})`}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0 bg-[#151226]">
+        <Command className="bg-[#151226] text-white">
+          <CommandInput placeholder="Search" />
+          <CommandList>
+            <CommandEmpty>No Funding Type found.</CommandEmpty>
+            <ScrollArea className="h-[200px]">
+              <CommandGroup className="text-white border-none">
+                <CommandItem onSelect={() => handleSelect("all")} className="cursor-pointer mr-2">
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedValues?.length === fundingTypes.length ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  Select All
+                </CommandItem>
+                {fundingTypes.map((type) => (
+                  <CommandItem
+                    key={type.value}
+                    onSelect={() => handleSelect(type.value)}
+                    className="cursor-pointer mr-2">
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedValues?.includes(type.value) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {type.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </ScrollArea>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+import { useState, useEffect } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { statuses } from "@/data/filterOptions";
+
+export function StatusDropdown({ selectedValues, setSelectedValues }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setSelectedValues(selectedValues);
+  }, [selectedValues, setSelectedValues]);
+
+  const handleSelect = (currentValue) => {
+    if (currentValue === "all") {
+      setSelectedValues(
+        selectedValues.length === statuses.length ? [] : statuses.map((b) => b.value)
+      );
+    } else {
+      setSelectedValues((current) =>
+        current.includes(currentValue)
+          ? current.filter((value) => value !== currentValue)
+          : [...current, currentValue]
+      );
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="justify-between bg-[#151226]/70 text-white hover:bg-[#151226] hover:text-white border-[#151226]">
+          <span>Status {selectedValues?.length > 0 && `(${selectedValues.length})`}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 bg-[#151226]">
+        <Command className="bg-[#151226] text-white">
+          <CommandInput placeholder="Search" />
+          <CommandList>
+            <CommandEmpty>No status found.</CommandEmpty>
+            <CommandGroup className="text-white border-none">
+              <CommandItem onSelect={() => handleSelect("all")} className="cursor-pointer mr-2">
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    selectedValues?.length === statuses.length ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                Select All
+              </CommandItem>
+              {statuses.map((status) => (
+                <CommandItem
+                  key={status.value}
+                  onSelect={() => handleSelect(status.value)}
+                  className="cursor-pointer">
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedValues?.includes(status.value) ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {status.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+import { useState, useEffect } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "./ui/scroll-area";
+import { fundingTopics, fundingTypes } from "@/data/filterOptions";
+
+export function FundingTopicsDropdown({ selectedValues, setSelectedValues }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setSelectedValues(selectedValues);
+  }, [selectedValues, setSelectedValues]);
+
+  const handleSelect = (currentValue) => {
+    if (currentValue === "all") {
+      setSelectedValues(
+        selectedValues.length === fundingTopics.length ? [] : fundingTopics.map((b) => b.value)
+      );
+    } else {
+      setSelectedValues((current) =>
+        current.includes(currentValue)
+          ? current.filter((value) => value !== currentValue)
+          : [...current, currentValue]
+      );
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="justify-between bg-[#151226]/70 text-white hover:bg-[#151226] hover:text-white border-[#151226]">
+          <span>Categories {selectedValues?.length > 0 && `(${selectedValues.length})`}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 bg-[#151226]">
+        <Command className="bg-[#151226] text-white">
+          <CommandInput placeholder="Search" />
+          <CommandList>
+            <CommandEmpty>No Funding Topic found.</CommandEmpty>
+            <ScrollArea className="h-[200px]">
+              <CommandGroup className="text-white border-none">
+                <CommandItem onSelect={() => handleSelect("all")} className="cursor-pointer mr-2">
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedValues?.length === fundingTypes.length ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  Select All
+                </CommandItem>
+                {fundingTopics.map((topic) => (
+                  <CommandItem
+                    key={topic.value}
+                    onSelect={() => handleSelect(topic.value)}
+                    className="cursor-pointer mr-2">
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedValues?.includes(topic.value) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {topic.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </ScrollArea>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+import { useState } from "react";
+import { CircleMinus, CirclePlus } from "lucide-react";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Separator } from "./ui/separator";
+
+const GrantCard = ({ grant }) => {
+  const [cardOpen, setCardOpen] = useState(false);
+
+  return (
+    <div className="rounded p-5 bg-[#151226]/10 text-white backdrop-blur-[3px] border border-purple-500/20">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <img src={grant.images} alt="" className="size-11 rounded" />
+            <h3 className="text-lg font-semibold">{grant.grantProgramName}</h3>
+          </div>
+          <div className="flex justify-evenly md:justify-between flex-1 items-center">
+            <Badge className="bg-[#00bbfc] hover:bg-[#00bbfc]">{grant.status}</Badge>
+            
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex text-gray-400 gap-2.5 text-[0.95rem]">
+              <span className="capitalize">
+                <span className="text-white font-semibold">Ecosystem: </span>
+                {grant.ecosystem}
+              </span>
+              {grant.total && <Separator orientation="vertical" className="bg-gray-400" />}
+
+              {grant.total && (
+                <span>
+                  <span className="text-white font-semibold">Total Funding: </span>
+                  {grant.total}
+                </span>
+              )}
+            </div>
+            {grant.fundingTopics && (
+              <div>
+                <h3 className="text-sm font-semibold">Categories:</h3>
+                <p className="text-gray-400 text-sm">{grant.fundingTopics}</p>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-4 items-center justify-center">
+            <Button
+              variant="ghost"
+              className="p-0 group [&_svg]:size-7 hover:bg-transparent"
+              onClick={() => setCardOpen(!cardOpen)}>
+              {cardOpen ? (
+                <CircleMinus className="text-[#00bbfc] group-hover:text-white  transition-colors" />
+              ) : (
+                <CirclePlus className=" text-[#00bbfc] group-hover:text-white transition-colors" />
+              )}
+            </Button>
+            <a
+              href={grant.website} target="_blank"
+              className="bg-[#00bbfc] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-sky-600 transition-colors">
+              Apply
+            </a>
+          </div>
+        </div>
+      </div>
+      {cardOpen && (
+        <div className="flex flex-col mt-4 gap-4">
+          {grant.description && (
+            <div className="flex flex-col">
+              <h3 className="text-sm font-semibold">Description:</h3>
+              <p className="text-gray-400 text-sm">{grant.description}</p>
+            </div>
+          )}
+          {grant.topicsForFunding && (
+            <div className="flex flex-col">
+              <h3 className="text-sm font-semibold">Topics:</h3>
+              <p className="text-gray-400 text-sm">{grant.topicsForFunding}</p>
+            </div>
+          )}
+          {grant.totalFundingAvailable && (
+            <div className="flex flex-col">
+              <h3 className="text-sm font-semibold">Funding Detail:</h3>
+              <p className="text-gray-400 text-sm">{grant.totalFundingAvailable}</p>
+            </div>
+          )}
+          {grant.minFunding && (
+            <div className="flex gap-2">
+              <h3 className="text-sm font-semibold">Min Funding:</h3>
+              <p className="text-gray-400 text-sm">{grant.minFunding}</p>
+            </div>
+          )}
+          {grant.maxFunding && (
+            <div className="flex gap-2">
+              <h3 className="text-sm font-semibold">Max Funding:</h3>
+              <p className="text-gray-400 text-sm">{grant.maxFunding}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+export default GrantCard;
+import AboutUs from "./AboutUs";
+import FAQ from "./FAQ";
+
+const Header = () => {
+  return (
+    <header className="px-6 py-3 backdrop-blur-md bg-[#151226]/35 text-white fixed w-full z-10 shadow border-b border-gray-600 rounded-b-3xl">
+      <nav className="flex flex-col md:flex-row justify-between items-center">
+        <div className="w-72 lg:w-52">
+          <a href="https://www.cornarolabs.xyz" target="_blank" rel="noreferrer">
+            <img src="./logo.png" alt="" />
+          </a>
+        </div>
+        <div className="flex gap-1 md:gap-4 items-center">
+          <AboutUs />
+          <FAQ />
+          <a
+            href="https://tally.so/r/nPGzAb"
+            target="_blank"
+            rel="noreferrer"
+            className="text-white px-2 md:px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors font-semibold">
+            Add Grant
+          </a>
+        </div>
+      </nav>
+    </header>
+  );
+};
+export default Header;
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { ScrollArea } from "../ui/scroll-area";
+
+const FAQ = () => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" className="text-white border-white text-base">
+          FAQ
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="bg-[#151226] text-white/70 text-sm">
+        <DialogTitle className="text-2xl text-white underline">
+          Frequently Asked Questions
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          Frequently asked questions about the project
+        </DialogDescription>
+        <ScrollArea className="max-h-[400px]">
+          <div className="flex flex-col gap-4 text-start text-white pr-3">
+            <div>
+              <h3 className="text-lg font-semibold">Q. How can I navigate the database?</h3>
+              <p className="text-sm text-white/70">
+                You can filter grant opportunities by ecosystem, topics for funding, and active or
+                upcoming opportunities. Make sure to scroll through the page to view all
+                opportunities.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold">Q. How often is the database updated?</h3>
+              <p className="text-sm text-white/70">
+                The database is updated{" "}
+                <span className="font-semibold text-slate-50"> every 48 hours</span> to ensure it
+                contains the most accurate and active grant opportunities available.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold">
+                Q. Does this database show past/expired grant opportunities?
+              </h3>
+              <p className="text-sm text-white/70">
+                No, this database is focused exclusively on showcasing{" "}
+                <span className="font-semibold text-slate-50">ACTIVE</span> and{" "}
+                <span className="font-semibold text-slate-50">UPCOMING</span> grant opportunities.
+                We ensure its relevance by{" "}
+                <span className="font-semibold text-slate-50">
+                  regularly reviewing and updating the information
+                </span>{" "}
+                to keep it current.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold">
+                Q. Who do I contact if I have questions or find an error?
+              </h3>
+              <p className="text-sm text-white/70">
+                If you have any questions, spot an error, or want to share feedback, feel free to
+                reach out to us at{" "}
+                <a href="mailto:marianna@cornarolabs.xyz" className="text-blue-500">
+                  marianna@cornarolabs.xyz
+                </a>
+                . We’re here to help and appreciate your input to make this resource even better!
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold">
+                Q. Can I add a new grant program to the database?
+              </h3>
+              <p className="text-sm text-white/70">
+                Absolutely! If you’re aware of an active or upcoming Web3 grant program that isn’t
+                listed here, we’d love to hear about it. Please <a href="https://docs.google.com/forms/d/e/1FAIpQLSewB2GaJXyWY5m1de5zw-vnP4KotEtHu6sujaDWP9tWaoAquw/viewform"
+                  target="_blank"
+                  className="text-blue-500 hover:underline" >fill in this form </a> or email us the details at{" "}
+                <a href="mailto:marianna@cornarolabs.xyz" className="text-blue-500">
+                  marianna@cornarolabs.xyz
+                </a>
+                , and we’ll review and add it to the database.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold">
+                Q. Is this the final version of the dashboard?
+              </h3>
+              <p className="text-sm text-white/70">
+                Not at all! This is just version 1 of what we are building—simple yet functional. Stay tuned for a more advanced version{" "}
+                <span className="font-semibold text-slate-50">
+                  that will include additional features and improvements such as the AI-powered Grant Matching and the Data-Driven Grant Analytics features.
+                </span>
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold">Q. Is this dashboard free to use?</h3>
+              <p className="text-sm text-white/70">
+               CL Web3 Grants offers core features such as the grants database and AI-powered matching tool for free, with premium services available for those needing deeper support. This two-tier model ensures broad access to valuable knowledge while providing advanced strategic guidance and resources to drive decentralization and innovation.
+                For projects seeking hands-on support, Cornaro Labs provides expert consulting services to help Web3 teams secure funding, navigate grant opportunities, and optimize their applications. <a href="https://calendly.com/cornarolabs"
+                  target="_blank"
+                  className="text-blue-500 hover:underline">Book your free consultation today!</a>
+
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold">Q. Are there any other free resources?</h3>
+              <p className="text-sm text-white/70">
+                Yes! You may subscribe to our newsletter,{" "}
+                <a
+                  href="https://cornarolabs.substack.com"
+                  target="_blank"
+                  className="text-blue-500 hover:underline">
+                  CL Web3 Grants
+                </a>
+                , featuring curated grant opportunities for Web3 projects. In{" "}
+                <a
+                  href="https://cornarolabs.substack.com"
+                  target="_blank"
+                  className="text-blue-500 hover:underline">
+                  CL Web3 Grants
+                </a>
+                , you’ll find new grant opportunities, insider tips for writing winning
+                applications, pitch competitions, and events to elevate your Web3 journey.
+              </p>
+            </div>
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default FAQ;
+import { Dot } from "lucide-react";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { ScrollArea } from "../ui/scroll-area";
+
+const coreFeatures = [
+  {
+    title: "The Largest Web3 Grants Database",
+    description:
+      "Access the most extensive and up-to-date database of grant opportunities, updated every 48 hours. Stay ahead with real-time updates on new funding programs, eligibility criteria, and deadlines.",
+  },
+  {
+    title: (
+      <>
+        AI-Powered Grant Matching{" "}
+        <a
+          href="https://tally.so/r/wb6d0o"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline"
+        >
+          (Coming Soon)
+        </a>
+      </>
+    ),
+    description:
+      "No more searching through endless programs—just fill out a simple form, and our AI-backed tool will match you with the most suitable grant opportunities for your project.",
+  },
+  {
+    title: (
+      <>
+        Data-Driven Grant Analytics{" "}
+        <a
+          href="https://tally.so/r/wb6d0o"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline"
+        >
+          (Coming Soon)
+        </a>
+      </>
+    ),
+    description:
+      "Gain strategic insights with our analytics tools. Assess grant program strengths, identify gaps, and measure the impact of funded projects. Designed for builders and funding protocols looking to optimize grant allocation.",
+  },
+  {
+    title: (
+      <>
+        Expanding Beyond Web3{" "}
+        <a
+          href="https://tally.so/r/wb6d0o"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline"
+        >
+          (Coming Soon)
+        </a>
+      </>
+    ),
+    description:
+      "While our platform focuses on Web3 projects and ecosystem grants, we are expanding to integrate and analyze institutional funding sources and broader grant categories—bridging the gap between Web3 and traditional funding to help builders and protocols diversify funding strategies and make data-backed decisions for long-term growth.",
+  },
+];
+
+const team = [
+  {
+    name: "Marianna Charalambous",
+    link: "https://www.linkedin.com/in/mariannacharalambous/",
+    role: "Project Lead, Head of Operations – Oversees platform development and strategic initiatives.",
+  },
+  {
+    name: "Dr. Androniki Menelaou",
+    link: "https://www.linkedin.com/in/androniki-menelaou-7994aa60/",
+    role: "Head of AI and Data Analytics – Drives the design of AI algorithms and advanced analytics.",
+  },
+  {
+    name: "Mariana de la Roche W. (BlackVogel)",
+    link: "https://www.linkedin.com/in/mariana-de-la-roche-es/",
+    role: "Head of BD – Manages business development and community outreach.",
+  },
+  {
+    name: "Stamatis Manos Papangelou",
+    link: "https://www.linkedin.com/in/stamatis-papangelou/",
+    role: "DLTs, AI and Data Analytics Advisor – Offers expert guidance on machine learning models and data strategy.",
+  },
+];
+
+const AboutUs = () => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" className="text-white border-white text-base">
+          About Us
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="bg-[#151226] text-white/70 text-sm">
+        <DialogTitle className="text-2xl text-white">
+          CL Web3 Grants Dashboard: Find. Match. Analyze.
+        </DialogTitle>
+        <DialogDescription className="sr-only">About the project</DialogDescription>
+        <ScrollArea className="max-h-[350px]">
+          <div className="flex flex-col gap-4">
+            <p>
+              CL Web3 Grants Dashboard by{" "}
+              <a
+                href="http://www.cornarolabs.xyz"
+                target="_blank"
+                className="text-blue-500 hover:underline"
+              >
+                Cornaro Labs
+              </a>{" "}
+              is designed{" "}
+              <span className="font-semibold text-slate-50">
+                to revolutionize how Web3 grant programs are accessed, managed, and analyzed.
+              </span>
+              The platform is built in collaboration with{" "}
+              <a
+                href="https://www.blackvogel.com/"
+                target="_blank"
+                className="text-blue-500 hover:underline"
+              >
+                BlackVogel Consulting
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://hbi.gr/en/"
+                target="_blank"
+                className="text-blue-500 hover:underline"
+              >
+                Hareva Business Ideas.
+              </a>
+            </p>
+            <p>
+              The idea for this came from a common frustration: finding a{" "}
+              <span className="font-semibold text-slate-50">
+                reliable, up-to-date resource for ACTIVE and UPCOMING grant opportunities.
+              </span>
+              Many existing databases are static, created once and forgotten. We wanted to change
+              that by ensuring this database stays relevant and genuinely useful for Web3 projects
+              seeking funding.
+            </p>
+            <p>
+              In addition to providing support to builders looking for grant funding, our solution
+              provides a comprehensive analytics dashboard tailored for Web3 grant programs. It
+              integrates key metrics, AI-powered grant matchmaking, data-driven analytics, and
+              impact measurement tools to enhance decision-making and optimize funding strategies.
+            </p>
+            <p>
+              Backed by experts in grants, blockchain, and AI, we provide a data solution for both
+              Web3 funding protocols and builders, helping them make smarter decisions, track
+              impact, and achieve better results with actionable insights.
+            </p>
+            <div>
+              <h3 className="text-lg text-white font-bold underline">Our Core Features</h3>
+              <div className="flex flex-col gap-4">
+                {coreFeatures.map((feature) => (
+                  <div key={feature.title} className="flex flex-col gap-2">
+                    <h4 className="text-[0.95rem] font-semibold text-white">{feature.title}</h4>
+                    <p className="text-sm">{feature.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg text-white font-bold underline">Our Team</h3>
+              <div className="flex flex-col gap-2">
+                {team.map((member) => (
+                  <div key={member.name} className="flex flex-col">
+                    <h4 className="text-[0.95rem] font-semibold text-white flex items-center">
+                      <Dot className="w-4 h-4" />
+                      <a
+                        href={member.link}
+                        target="_blank"
+                        className="text-blue-500 hover:underline"
+                      >
+                        {member.name}
+                      </a>
+                    </h4>
+                    <p className="text-sm ml-4">{member.role}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+        <p className="text-lg text-center text-white font-semibold">
+          Built with ❤️ by{" "}
+          <a href="https://workpadhq.com/" target="_blank" className="text-blue-500 hover:underline">
+            WorkPadHQ team
+          </a>
+        </p>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AboutUs;
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+
+import "./index.css";
+import App from "./App.jsx";
+
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+import Board from "./components/Board";
+import Header from "./components/Header/Header";
+import ChatbotContainer from "./components/ChatBot/ChatbotContainer";
+
+function App() {
+  return (
+    <>
+      <Header />
+      <main className="flex flex-col items-center justify-center pt-40 lg:pt-32 pb-5">
+        <div className="flex flex-col items-center space-y-4">
+          <h1 className="text-4xl font-medium text-center">CL Web3 Grants Dashboard</h1>
+          <p className="text-[#ffffff7a] max-w-[55rem] text-center px-4">
+            A public good initiative empowering Web3 projects through a dynamic grant database of
+            over 100 opportunities.
+            <br />
+            The database is updated every 48 hours to ensure the most accurate and active
+            opportunities.
+          </p>
+        </div>
+        <div className="w-[80%] lg:w-[95%] mx-auto my-6 flex flex-col lg:flex-row-reverse items-center lg:items-start gap-8 justify-center">
+          <ChatbotContainer />
+          <div className="w-full">
+            <div className="flex items-center pt-3 gap-5 font-medium text-white mb-0.5 border-b border-gray-600">
+              <p className="relative">
+                Search Grants Database
+                <span className="w-full absolute bg-[#00bbfc] h-0.5 left-0 bottom-0"></span>
+              </p>
+            </div>
+            <Board />
+          </div>
+        </div>
+      </main>
+      <footer className="flex flex-col items-center space-y-2 pb-8">
+        <div className="flex flex-col justify-center items-center mb-1 gap-2">
+          <a href="https://www.cornarolabs.xyz" target="_blank" rel="noreferrer">
+            <img src="./logo.png" alt="" className="w-[14.625rem]" />
+          </a>
+          <div>
+            <p className="text-white text-sm text-center">
+              CL Web3 Grants Dashboard by{" "}
+              <a
+                href="http://www.cornarolabs.xyz"
+                target="_blank"
+                className="text-blue-500 hover:underline">
+                Cornaro Labs
+              </a>{" "}
+              is built in collaboration with:
+            </p>
+            <div className="flex gap-2 items-center px-2">
+              <a href="https://www.blackvogel.com/" target="_blank" rel="noreferrer">
+                <img src="./logo2.svg" alt="" className="w-52" />
+              </a>
+              <a href="https://hbi.gr/en/" target="_blank" rel="noreferrer">
+                <img src="./logo3.jpeg" alt="" className="w-52" />
+              </a>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p className="flex flex-col items-center space-y-2 mt-4 text-[#ffffff7a]/20 text-xs text-center">
+            <span>© Cornaro Labs 2025. All rights reserved.</span> For inquiries, please reach out
+            to us at info@cornarolabs.xyz
+          </p>
+        </div>
+      </footer>
+    </>
+  );
+}
+
+export default App;
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}
+export const ecosystems = [
+  { value: "Aptos", label: "Aptos" },
+  { value: "Base", label: "Base" },
+  { value: "Cartesi", label: "Cartesi"},
+  { value: "Cosmos", label: "Cosmos" },
+  { value: "Ethereum", label: "Ethereum" },
+  { value: "EU", label: "European Union" },
+  { value: "Filecoin", label: "Filecoin" },
+  { value: "Fuel", label: "Fuel" },
+  { value: "Hedera", label: "Hedera" },
+  { value: "IOTA", label: "IOTA" },
+  { value: "Kadena", label: "Kadena" },
+  { value: "Linea", label: "Linea" },
+  { value: "Nibiru", label: "Nibiru" },
+  { value: "Other", label: "Other" },
+  { value: "Polkadot", label: "Polkadot" },
+  { value: "Ripple", label: "Ripple" },
+  { value: "Stellar", label: "Stellar" },
+  { value: "XION", label: "XION" },
+  { value: "Dfinity", label: "Difinity" },
+  { value: "TON", label: "TON" },
+  { value: "Solana", label: "Solana" },
+  { value: "Starknet", label: "Starknet" },
+{ value: "Polygon", label: "Polygon" },
+  { value: "Cardano", label: "Cardano" },
+  
+];
+
+export const statuses = [
+  { value: "Active", label: "Active" },
+  { value: "Upcoming", label: "Upcoming" }
+];
+
+export const fundingTopics = [
+  { value: "AI", label: "AI" },
+  { value: "AIAgents", label: "AIAgents" },
+    { value: "Bugs", label: "Bugs" },
+  { value: "CrossChain", label: "CrossChain" },
+  { value: "DAOs", label: "DAOs" },
+  { value: "Data & Oracles", label: "Data & Oracles" },
+  { value: "DeFi", label: "DeFi" },
+  { value: "DePIN", label: "DePIN" },
+  { value: "DevTooling", label: "Developer Tooling" },
+  { value: "Digital Euro", label: "Digital Euro" },
+  { value: "Education", label: "Education" },
+    { value: "Events", label: "Events" },
+  { value: "Gaming", label: "Gaming & Metaverse" },
+  { value: "Infra", label: "Infrastructure" },
+  { value: "NFTs", label: "NFTs & Creator Economy" },
+  { value: "Privacy & Security", label: "Privacy & Security" },
+  { value: "PublicGoods", label: "Public Goods & Open Source" },
+  { value: "RWAs", label: "Real-World Assets (RWAs)" },
+  { value: "Social & Community", label: "Social & Community" },
+  { value: "Stablecoins & Payments", label: "Stablecoins & Payments" },
+   { value: "Sustainability", label: "Sustainability" },
+  { value: "ZK", label: "Zero Knowledge (ZK)" }
+ 
+];
+
+export const fundingTypes = [
+  { value: "AI-BlockchainResearchGrants", label: "AI-Blockchain Research Grants" },
+  { value: "Bounty-Based", label: "Bounty-Based" },
+  { value: "HackathonGrants", label: "Hackathon Grants" },
+  { value: "IncubationAcceleration", label: "Incubation & Acceleration" },
+  { value: "MatchingGrants", label: "Matching Grants" },
+  { value: "OpenGrants", label: "Open Grants" },
+  { value: "QuadraticFunding", label: "Quadratic Funding" },
+  { value: "RetroactiveGrants", label: "Retroactive Grants" }, 
+  { value: "StakingLiquidityIncentives", label: "Staking & Liquidity Incentives" },
+   { value: "Tender", label: "Tender" }
+];
