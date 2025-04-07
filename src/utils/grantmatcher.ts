@@ -75,8 +75,7 @@ description
 topicsForFunding
 fundingType
 website
-maxFunding
-Deadline Date
+
 Reduce the use of emojis in responses.
 
 Interaction Protocol:
