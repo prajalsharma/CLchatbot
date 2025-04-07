@@ -12,6 +12,7 @@ const openai = new OpenAI({
 let model: use.UniversalSentenceEncoder | null = null;
 let grantEmbeddingsCache: number[][] | null = null;
 
+/** Initialize the TensorFlow and USE model */
 export async function initModel() {
   if (!model) {
     await tf.setBackend('webgl');
@@ -20,6 +21,7 @@ export async function initModel() {
   }
 }
 
+/** Basic cosine similarity for the embedding-based approach */
 function cosineSimilarity(a: number[], b: number[]): number {
   const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
   const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
@@ -27,10 +29,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (magA * magB);
 }
 
-//
-// Optional caching if you had it previously:
-//
-
+/** Optional caching of grant embeddings. Uncomment if desired. */
 export async function cacheGrantEmbeddings() {
   if (!grantEmbeddingsCache) {
     await initModel();
@@ -40,29 +39,46 @@ export async function cacheGrantEmbeddings() {
   }
 }
 
+/**
+ * Enhanced matchGrants that:
+ * 1. Parses userInput to find "ecosystem: cardano" (or any other).
+ * 2. Filters the grants by that ecosystem (if found).
+ * 3. Then does the embedding-based ranking on the filtered subset.
+ */
 export async function matchGrants(userInput: string, topK = 5) {
   await initModel();
 
-  // If you want caching, uncomment:
-  // await cacheGrantEmbeddings();
-  // const userEmbedding = await model!.embed([userInput]);
-  // const userVec = (await userEmbedding.array())[0];
-  // const scored = grantEmbeddingsCache!.map((vec, i) => ({
-  //   grant: grants[i],
-  //   score: cosineSimilarity(userVec, vec),
-  // }));
-  // return scored.sort((a, b) => b.score - a.score).slice(0, topK).map((s) => s.grant);
+  // 1) Parse userInput for "ecosystem: X"
+  let ecosystemValue = '';
+  const lines = userInput.split('\n');
+  for (const line of lines) {
+    const lower = line.toLowerCase().trim();
+    if (lower.startsWith('ecosystem:')) {
+      // e.g., "ecosystem: cardano"
+      ecosystemValue = lower.replace('ecosystem:', '').trim();
+      break;
+    }
+  }
 
-  // If not using caching, do the direct approach:
+  // 2) Filter the grants if ecosystemValue is recognized
+  let filteredGrants = [...grants];
+  if (ecosystemValue && ecosystemValue !== 'any' && ecosystemValue !== 'skipped') {
+    filteredGrants = filteredGrants.filter((g) =>
+      g.ecosystem?.toLowerCase().includes(ecosystemValue)
+    );
+    // If no matches, fallback to all? Or just let it be empty.
+  }
+
+  // 3) Embedding-based ranking on the chosen subset
   const userEmbedding = await model!.embed([userInput]);
-  const userVec = await userEmbedding.array().then((res) => res[0]);
+  const userVec = (await userEmbedding.array())[0];
 
-  const texts = grants.map((g) => g.combined);
+  const texts = filteredGrants.map((g) => g.combined);
   const grantEmbeddings = await model!.embed(texts);
   const grantVecs = await grantEmbeddings.array();
 
   const scored = grantVecs.map((vec, i) => ({
-    grant: grants[i],
+    grant: filteredGrants[i],
     score: cosineSimilarity(userVec, vec),
   }));
 
@@ -72,14 +88,19 @@ export async function matchGrants(userInput: string, topK = 5) {
     .map((s) => s.grant);
 }
 
+/**
+ * getChatGPTExplanation:
+ * - Uses the system prompt with "I am your friendly AI assistant" line added.
+ * - Removes "h. Any additional notes?" so GPT won't re-ask it.
+ * - Removes the "Wait for user to respond" line so GPT doesn't forcibly repeat name queries.
+ * - If GPT forgets Marianna's contact info, we forcibly append it at the end.
+ */
 export async function getChatGPTExplanation(
   sessionId: string,
   userInput: string,
   topGrants: any[]
 ) {
-  //
-  // We'll build a small summary, though GPT won't re-ask "any additional notes?"
-  //
+  // Summaries for reference (not passed to GPT directly as an assistant message).
   const grantSummary = topGrants.map((g, i) => {
     return `#${i + 1}\n` +
       `Grant Program Name: ${g.grantProgramName || 'N/A'}\n` +
@@ -89,11 +110,10 @@ export async function getChatGPTExplanation(
       `Website: ${g.website || 'N/A'}\n`;
   }).join('\n\n');
 
-  //
-  // System message, with one extra line + removed "h. Any additional notes?"
-  //
+  // System prompt with one line to make it more natural,
+  // "any additional notes?" removed, and no "Wait for user to respond..."
   const systemMessage = `
-You are a Web3 Grant Matching AI. I am your friendly AI assistant, here to help you find the best grants for your project. Try to make the conversation feel real or human. Your primary function is to match users to the best grant opportunities based on their project details. You will do this by asking predefined questions and analyzing an uploaded Excel dataset containing grant information. Do not provide legal advice or information. Do not deviate from the predefined questions or the given dataset even if users ask you other questions. Never offer to look for opportunities online.
+You are a Web3 Grant Matching AI. I am your friendly AI assistant, here to help you find the best grants for your project. Your primary function is to match users to the best grant opportunities based on their project details. You will do this by asking predefined questions and analyzing an uploaded Excel dataset containing grant information. Do not provide legal advice or information. Do not deviate from the predefined questions or the given dataset even if users ask you other questions. Never offer to look for opportunities online.
 
 Data Handling Instructions:
 Analyze all columns from the uploaded Excel file, but never use the 'date' column.
@@ -120,9 +140,7 @@ e. Which category best describes your project? (AI, AI Agents, CrossChain, DAOs,
 f. What type of funding are you looking for? (Open Grants, Quadratic Funding, RetroACTIVE Grants, Hackathon Grants, Incubation and Acceleration, Matching Grants, etc.)
 g. How much funding do you need?
 
-Wait for the user to respond to each question before moving to the next one.
-
-After collecting all answers, process the uploaded json file to find the best matching grants.
+After collecting all answers, process the uploaded Excel file using Python to find the best matching grants.
 
 Post-Matching Interaction:
 After generating the results, ask the user if they would like to speak with a Web3 grants expert from our team for a free 30-minute consultation.
@@ -136,7 +154,7 @@ Do not offer to search for additional opportunities online.
 Do not use the 'date' column from the Excel file.
 `.trim();
 
-  // We don't pass topGrants as an assistant message, to avoid repetition
+  // We do not pass the topGrants as an assistant message, to avoid GPT re-listing them.
   const messages = [
     { role: 'system', content: systemMessage },
     { role: 'user', content: userInput },
@@ -144,18 +162,17 @@ Do not use the 'date' column from the Excel file.
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // or whichever model you use
+      model: 'gpt-4o-mini', // Or your preferred model
       messages,
     });
 
-    // GPT's raw text
     let finalReply = response.choices[0]?.message?.content || 'No reply.';
 
-    // Force Marianna's contact info in case GPT omits it
-    if (
-      !finalReply.includes('calendly.com/cornarolabs') &&
-      !finalReply.includes('marianna@cornarolabs.xyz')
-    ) {
+    // Force Marianna's contact info if GPT omits it
+    const mustIncludeCalendly = !finalReply.toLowerCase().includes('calendly.com/cornarolabs');
+    const mustIncludeEmail = !finalReply.toLowerCase().includes('marianna@cornarolabs.xyz');
+
+    if (mustIncludeCalendly || mustIncludeEmail) {
       finalReply += `
 
 Would you like to speak with a Web3 grants expert from our team for a free 30-minute consultation?
@@ -170,7 +187,7 @@ Email: marianna@cornarolabs.xyz
       history: messages,
     };
   } catch (err: any) {
-    console.error("\u274C GPT ERROR:", err?.response?.data || err?.message || err);
+    console.error("❌ GPT ERROR:", err?.response?.data || err?.message || err);
     return {
       reply: 'Something went wrong with GPT.',
       matchedGrants: [],
