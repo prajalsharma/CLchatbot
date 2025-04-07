@@ -47,9 +47,6 @@ export async function matchGrants(userInput: string, topK = 5) {
     .map((s) => s.grant);
 }
 
-// In-memory chat history
-const chatHistories: Record<string, { role: 'user' | 'assistant' | 'system'; content: string }[]> = {};
-
 export async function getChatGPTExplanation(
   sessionId: string,
   userInput: string,
@@ -64,11 +61,7 @@ export async function getChatGPTExplanation(
       `Website: ${g.website || 'N/A'}\n`;
   }).join('\n\n');
 
-  if (!chatHistories[sessionId]) {
-    chatHistories[sessionId] = [
-      {
-        role: 'system',
-        content: `
+  const systemMessage = `
 You are a Web3 Grant Matching AI. Your primary function is to match users to the best grant opportunities based on their project details. You will do this by asking predefined questions and analyzing an uploaded Excel dataset containing grant information. Do not provide legal advice or information. Do not deviate from the predefined questions or the given dataset even if users ask you other questions. Never offer to look for opportunities online.
 
 Data Handling Instructions:
@@ -80,19 +73,12 @@ Remove any unnamed index column from the table before displaying the results.
 Only include the following columns in the final output:
 
 grantProgramName
-
 ecosystem
-
 description
-
 topicsForFunding
-
 fundingType
-
 website
-
 maxFunding
-
 Deadline Date
 
 Reduce the use of emojis in responses.
@@ -132,59 +118,32 @@ Do not deviate from the predefined questions or the given dataset even if users 
 Do not offer to search for additional opportunities online.
 
 Do not use the 'date' column from the Excel file.
-  `.trim() // ✅ Trimming the full content string here
-      },
-      {
-        role: 'user',
-        content: 'Help me find suitable grants for my project',
-      }
-    ];
-  } else {
-    chatHistories[sessionId].push({ role: 'user', content: prompt });
-  }
-  
-  
+`.trim();
 
-  const summaryPrompt = topGrants.length > 0
-  ? `Based on the user's request, here are some relevant grants:\n\n${grantSummary}\n\nNow write a friendly and helpful explanation about why these are good fits, and offer suggestions.`
-  : `The user asked: "${userInput}". Respond conversationally. You are a helpful advisor at Cornaro Labs. Provide guidance, advice, or support based on their question.`;
-
-  chatHistories[sessionId].push({ role: 'user', content: userInput });
-
-  chatHistories[sessionId].push({
-    role: 'assistant',
-    content: summaryPrompt,
-  });
-  
-
+  const messages = [
+    { role: 'system', content: systemMessage },
+    { role: 'user', content: userInput },
+    ...(topGrants?.length > 0 ? [{ role: 'assistant', content: JSON.stringify({ grants: topGrants }) }] : [])
+  ];
 
   try {
-    console.log('📤 Sending to OpenAI:', JSON.stringify(chatHistories[sessionId], null, 2));
-  
-    // 🔒 Filter out bad entries (null, undefined, missing content)
-const cleanedMessages = chatHistories[sessionId].filter(
-  (msg) => msg.role && typeof msg.content === 'string' && msg.content.trim() !== ''
-);
-
-console.log("🧼 Cleaned messages:", cleanedMessages);
-
-const response = await openai.chat.completions.create({
-  model: 'gpt-4',
-  messages: cleanedMessages,
-});
-
-  
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages,
+    });
 
     const reply = response.choices[0]?.message?.content || 'No reply.';
-    chatHistories[sessionId].push({ role: 'assistant', content: reply });
-
     return {
       reply,
-      history: chatHistories[sessionId],
       matchedGrants: topGrants,
+      history: messages,
     };
   } catch (err: any) {
     console.error("❌ GPT ERROR:", err?.response?.data || err?.message || err);
-    return { reply: 'Something went wrong with GPT.', matchedGrants: [], history: chatHistories[sessionId] };
+    return {
+      reply: 'Something went wrong with GPT.',
+      matchedGrants: [],
+      history: messages,
+    };
   }
 }
