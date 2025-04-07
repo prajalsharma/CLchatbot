@@ -113,7 +113,7 @@ Do not use the 'date' column from the Excel file.
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages,
     });
 
