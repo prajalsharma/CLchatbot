@@ -10,6 +10,7 @@ const openai = new OpenAI({
 });
 
 let model: use.UniversalSentenceEncoder | null = null;
+let grantEmbeddingsCache: number[][] | null = null;
 
 export async function initModel() {
   if (!model) {
@@ -26,9 +27,33 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (magA * magB);
 }
 
+//
+// Optional caching if you had it previously:
+//
+
+export async function cacheGrantEmbeddings() {
+  if (!grantEmbeddingsCache) {
+    await initModel();
+    const texts = grants.map((g) => g.combined);
+    const embeddings = await model!.embed(texts);
+    grantEmbeddingsCache = await embeddings.array();
+  }
+}
+
 export async function matchGrants(userInput: string, topK = 5) {
   await initModel();
 
+  // If you want caching, uncomment:
+  // await cacheGrantEmbeddings();
+  // const userEmbedding = await model!.embed([userInput]);
+  // const userVec = (await userEmbedding.array())[0];
+  // const scored = grantEmbeddingsCache!.map((vec, i) => ({
+  //   grant: grants[i],
+  //   score: cosineSimilarity(userVec, vec),
+  // }));
+  // return scored.sort((a, b) => b.score - a.score).slice(0, topK).map((s) => s.grant);
+
+  // If not using caching, do the direct approach:
   const userEmbedding = await model!.embed([userInput]);
   const userVec = await userEmbedding.array().then((res) => res[0]);
 
@@ -52,6 +77,9 @@ export async function getChatGPTExplanation(
   userInput: string,
   topGrants: any[]
 ) {
+  //
+  // We'll build a small summary, though GPT won't re-ask "any additional notes?"
+  //
   const grantSummary = topGrants.map((g, i) => {
     return `#${i + 1}\n` +
       `Grant Program Name: ${g.grantProgramName || 'N/A'}\n` +
@@ -61,8 +89,11 @@ export async function getChatGPTExplanation(
       `Website: ${g.website || 'N/A'}\n`;
   }).join('\n\n');
 
+  //
+  // System message, with one extra line + removed "h. Any additional notes?"
+  //
   const systemMessage = `
-You are a Web3 Grant Matching AI. Your primary function is to match users to the best grant opportunities based on their project details. You will do this by asking predefined questions and analyzing an uploaded Excel dataset containing grant information. Do not provide legal advice or information. Do not deviate from the predefined questions or the given dataset even if users ask you other questions. Never offer to look for opportunities online.
+You are a Web3 Grant Matching AI. I am your friendly AI assistant, here to help you find the best grants for your project. Try to make the conversation feel real or human. Your primary function is to match users to the best grant opportunities based on their project details. You will do this by asking predefined questions and analyzing an uploaded Excel dataset containing grant information. Do not provide legal advice or information. Do not deviate from the predefined questions or the given dataset even if users ask you other questions. Never offer to look for opportunities online.
 
 Data Handling Instructions:
 Analyze all columns from the uploaded Excel file, but never use the 'date' column.
@@ -75,7 +106,8 @@ description
 topicsForFunding
 fundingType
 website
-
+maxFunding
+Deadline Date
 Reduce the use of emojis in responses.
 
 Interaction Protocol:
@@ -87,11 +119,10 @@ d. What stage is your project in? (Idea, MVP, Scaling, Mature)
 e. Which category best describes your project? (AI, AI Agents, CrossChain, DAOs, Data & Oracles, DeFi, DePIN, DevTooling, Education, Events, Gaming, Infrastructure, NFTs & Creator Economy, Privacy & Security, Public Goods, RWAs, Social & Community, Stablecoins & Payments, Sustainability, ZK)
 f. What type of funding are you looking for? (Open Grants, Quadratic Funding, RetroACTIVE Grants, Hackathon Grants, Incubation and Acceleration, Matching Grants, etc.)
 g. How much funding do you need?
-h. Any additional notes?
 
 Wait for the user to respond to each question before moving to the next one.
 
-After collecting all answers, process the uploaded Excel file using Python to find the best matching grants.
+After collecting all answers, process the uploaded json file to find the best matching grants.
 
 Post-Matching Interaction:
 After generating the results, ask the user if they would like to speak with a Web3 grants expert from our team for a free 30-minute consultation.
@@ -105,21 +136,36 @@ Do not offer to search for additional opportunities online.
 Do not use the 'date' column from the Excel file.
 `.trim();
 
-  // The only change: we remove the extra assistant message that included the topGrants.
+  // We don't pass topGrants as an assistant message, to avoid repetition
   const messages = [
     { role: 'system', content: systemMessage },
-    { role: 'user', content: userInput }
+    { role: 'user', content: userInput },
   ];
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o-mini', // or whichever model you use
       messages,
     });
 
-    const reply = response.choices[0]?.message?.content || 'No reply.';
+    // GPT's raw text
+    let finalReply = response.choices[0]?.message?.content || 'No reply.';
+
+    // Force Marianna's contact info in case GPT omits it
+    if (
+      !finalReply.includes('calendly.com/cornarolabs') &&
+      !finalReply.includes('marianna@cornarolabs.xyz')
+    ) {
+      finalReply += `
+
+Would you like to speak with a Web3 grants expert from our team for a free 30-minute consultation?
+Calendly: https://calendly.com/cornarolabs
+Email: marianna@cornarolabs.xyz
+`;
+    }
+
     return {
-      reply,
+      reply: finalReply,
       matchedGrants: topGrants,
       history: messages,
     };
