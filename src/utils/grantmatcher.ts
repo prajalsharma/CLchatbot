@@ -52,15 +52,6 @@ export async function getChatGPTExplanation(
   userInput: string,
   topGrants: any[]
 ) {
-  const grantSummary = topGrants.map((g, i) => {
-    return `#${i + 1}\n` +
-      `Grant Program Name: ${g.grantProgramName || 'N/A'}\n` +
-      `Ecosystem: ${g.ecosystem || 'N/A'}\n` +
-      `Description: ${g.description || 'N/A'}\n` +
-      `Funding Type: ${g.fundingType || 'N/A'}\n` +
-      `Website: ${g.website || 'N/A'}\n`;
-  }).join('\n\n');
-
   const systemMessage = `
 You are a Web3 Grant Matching AI. Your primary function is to match users to the best grant opportunities based on their project details. You will do this by asking predefined questions and analyzing an uploaded Excel dataset containing grant information. Do not provide legal advice or information. Do not deviate from the predefined questions or the given dataset even if users ask you other questions. Never offer to look for opportunities online.
 
@@ -120,6 +111,15 @@ Do not offer to search for additional opportunities online.
 Do not use the 'date' column from the Excel file.
 `.trim();
 
+  const grantSummary = topGrants.map((g, i) => {
+    return `#${i + 1}\n` +
+      `Grant Program Name: ${g.grantProgramName || 'N/A'}\n` +
+      `Ecosystem: ${g.ecosystem || 'N/A'}\n` +
+      `Description: ${g.description || 'N/A'}\n` +
+      `Funding Type: ${g.fundingType || 'N/A'}\n` +
+      `Website: ${g.website || 'N/A'}\n`;
+  }).join('\n\n');
+
   const messages = [
     { role: 'system', content: systemMessage },
     { role: 'user', content: userInput },
@@ -133,6 +133,7 @@ Do not use the 'date' column from the Excel file.
     });
 
     const reply = response.choices[0]?.message?.content || 'No reply.';
+
     return {
       reply,
       matchedGrants: topGrants,
