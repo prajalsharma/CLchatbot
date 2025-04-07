@@ -240,15 +240,15 @@ export default function ChatbotContainer() {
   }, []);
 
   return (
-    <div className="bg-[#121C38] text-white p-6 rounded-xl shadow-lg border border-[#1F2A50] w-full lg:max-w-sm lg:sticky lg:top-20">
+    <div className="bg-[#121C38] text-white p-6 rounded-xl shadow-lg border border-[#1F2A50] w-full lg:max-w-md text-center lg:text-left">
       <h2 className="text-xl font-bold text-[#EAEAEA]">AI Grant Matcher Tool</h2>
       <p className="text-sm text-[#A1B1E1] mt-2">
         Our AI assistant will match your project with the ideal grant opportunity.
       </p>
 
       <Textarea
-        className="mt-4 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none h-24"
-        placeholder="Type your answer or 'skip'..."
+        className="mt-4 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none h-12"
+        placeholder="Ask about grants..."
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         onKeyDown={(e) => {
@@ -267,16 +267,15 @@ export default function ChatbotContainer() {
               handleSend();
               setIsOpen(true);
             }}
-            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all"
-          >
-            Next
+            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all">
+            Find Grants
           </Button>
         </SheetTrigger>
 
         {/* Updated SheetContent with white background and black text */}
-        <SheetContent className="w-full sm:max-w-[480px] p-0 bg-white text-black border-l border-gray-300 flex flex-col">
-          <div className="p-4 flex justify-between items-center border-b border-gray-300">
-            <h2 className="text-lg font-semibold text-black">
+        <SheetContent className="w-full sm:max-w-[480px] p-0 bg-[#121C38] text-white border-l border-[#1F2A50] flex flex-col">
+          <div className="p-4 flex justify-between items-center border-b border-[#1F2A50]">
+            <h2 className="text-lg font-semibold text-[#EAEAEA]">
               <img src="./logo.png" className="w-44" alt="" />
             </h2>
           </div>
@@ -288,16 +287,23 @@ export default function ChatbotContainer() {
                 return msg.grants.map((grant, i) => (
                   <div key={`${idx}-${i}`} className="p-4 bg-white border rounded shadow-sm">
                     <h3 className="font-bold text-lg">{grant.grantProgramName}</h3>
-                    <p><strong>Ecosystem:</strong> {grant.ecosystem}</p>
-                    <p><strong>Description:</strong> {grant.description}</p>
-                    <p><strong>Funding Type:</strong> {grant.fundingType}</p>
-                    <p><strong>Max Funding:</strong> {grant.maxFunding}</p>
+                    <p>
+                      <strong>Ecosystem:</strong> {grant.ecosystem}
+                    </p>
+                    <p>
+                      <strong>Description:</strong> {grant.description}
+                    </p>
+                    <p>
+                      <strong>Funding Type:</strong> {grant.fundingType}
+                    </p>
+                    <p>
+                      <strong>Max Funding:</strong> {grant.maxFunding}
+                    </p>
                     <a
                       href={grant.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
+                      className="text-blue-600 underline">
                       Website
                     </a>
                   </div>
@@ -305,8 +311,15 @@ export default function ChatbotContainer() {
               }
               // Otherwise text messages
               return (
-                <div key={idx} className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
-                  <div className={`inline-block px-3 py-2 rounded-xl shadow-lg ${msg.role === "user" ? "bg-[#3D5A99] text-white rounded-tr-none" : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"}`}>
+                <div
+                  key={idx}
+                  className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                  <div
+                    className={`inline-block px-3 py-2 rounded-xl shadow-lg ${
+                      msg.role === "user"
+                        ? "bg-[#3D5A99] text-white rounded-tr-none"
+                        : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"
+                    }`}>
                     {msg.content}
                   </div>
                 </div>
@@ -331,7 +344,7 @@ export default function ChatbotContainer() {
           <div className="p-4 border-t border-gray-300 flex gap-2">
             <Textarea
               className="flex-1 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none"
-              placeholder="Type your answer or 'skip'..."
+              placeholder="Describe your project..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => {
@@ -344,8 +357,7 @@ export default function ChatbotContainer() {
             <Button
               onClick={handleSend}
               disabled={isLoading}
-              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-white hover:text-[#3D5A99] transition-all [&_svg]:size-5 flex items-center justify-center"
-            >
+              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-white hover:text-[#3D5A99] transition-all [&_svg]:size-5 flex items-center justify-center">
               {isLoading ? (
                 <RotateCcw className="animate-[spin_1s_linear_infinite_reverse]" />
               ) : (
