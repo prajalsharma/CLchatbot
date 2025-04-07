@@ -273,9 +273,10 @@ export default function ChatbotContainer() {
           </Button>
         </SheetTrigger>
 
-        <SheetContent className="w-full sm:max-w-[480px] p-0 bg-[#121C38] text-white border-l border-[#1F2A50] flex flex-col">
-          <div className="p-4 flex justify-between items-center border-b border-[#1F2A50]">
-            <h2 className="text-lg font-semibold text-[#EAEAEA]">
+        {/* Updated SheetContent with white background and black text */}
+        <SheetContent className="w-full sm:max-w-[480px] p-0 bg-white text-black border-l border-gray-300 flex flex-col">
+          <div className="p-4 flex justify-between items-center border-b border-gray-300">
+            <h2 className="text-lg font-semibold text-black">
               <img src="./logo.png" className="w-44" alt="" />
             </h2>
           </div>
@@ -304,17 +305,8 @@ export default function ChatbotContainer() {
               }
               // Otherwise text messages
               return (
-                <div
-                  key={idx}
-                  className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}
-                >
-                  <div
-                    className={`inline-block px-3 py-2 rounded-xl shadow-lg ${
-                      msg.role === "user"
-                        ? "bg-[#3D5A99] text-white rounded-tr-none"
-                        : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"
-                    }`}
-                  >
+                <div key={idx} className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                  <div className={`inline-block px-3 py-2 rounded-xl shadow-lg ${msg.role === "user" ? "bg-[#3D5A99] text-white rounded-tr-none" : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"}`}>
                     {msg.content}
                   </div>
                 </div>
@@ -336,7 +328,7 @@ export default function ChatbotContainer() {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="p-4 border-t border-[#1F2A50] flex gap-2">
+          <div className="p-4 border-t border-gray-300 flex gap-2">
             <Textarea
               className="flex-1 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none"
               placeholder="Type your answer or 'skip'..."
