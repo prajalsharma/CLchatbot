@@ -15,6 +15,17 @@ export default function ChatbotContainer() {
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
 
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState({
+    name: "",
+    project: "",
+    ecosystem: "",
+    stage: "",
+    category: "",
+    fundingType: "",
+    fundingAmount: "",
+    notes: "",
+  });
+
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -44,26 +55,42 @@ export default function ChatbotContainer() {
       const isQuestionnaireRunning = messages.some(
         (m) =>
           m.role === "assistant" &&
-          /(could you|may I know|what(?:'s| is) your name|project|ecosystem|stage|category|funding|notes)/i.test(
+          /(what(?:'s| is) your name|project|ecosystem|stage|category|funding|notes)/i.test(
             m.content
           )
       );
 
-      const isQuestionnaireComplete = messages.some(
-        (m) =>
-          m.role === "assistant" &&
-          /here are some grants|matching grants for|no perfect matches|summarize the answers/i.test(
-            m.content
-          )
+      const isQuestionnaireComplete = Object.values(questionnaireAnswers).every(
+        (v) => v.trim() !== ""
       );
-
-      // 🧠 Only run grant matching if we're NOT in questionnaire and it's not running
 
       if (isGrantQuery && !isQuestionnaireRunning && isQuestionnaireComplete) {
-        matchedGrants = await matchGrants(prompt);
+        const combinedPrompt = Object.entries(questionnaireAnswers)
+          .map(([key, val]) => `${key}: ${val}`)
+          .join("\n");
+        matchedGrants = await matchGrants(combinedPrompt);
       }
 
       const { reply } = await getChatGPTExplanation(sessionId, prompt, matchedGrants);
+
+      // Auto-update answers if relevant
+      if (/what(?:'s| is) your name/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, name: prompt.trim() }));
+      } else if (/project name|brief description/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, project: prompt.trim() }));
+      } else if (/ecosystem/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, ecosystem: prompt.trim() }));
+      } else if (/stage/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, stage: prompt.trim() }));
+      } else if (/category/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, category: prompt.trim() }));
+      } else if (/type of funding/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, fundingType: prompt.trim() }));
+      } else if (/how much funding/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, fundingAmount: prompt.trim() }));
+      } else if (/additional notes/i.test(reply)) {
+        setQuestionnaireAnswers((prev) => ({ ...prev, notes: prompt.trim() }));
+      }
 
       if (isGrantQuery && matchedGrants?.length) {
         setMessages((prev) => [
@@ -137,77 +164,19 @@ export default function ChatbotContainer() {
                 return msg.grants.map((grant, i) => (
                   <div key={`${idx}-${i}`} className="p-4 bg-white border rounded shadow-sm">
                     <h3 className="font-bold text-lg">{grant.grantProgramName}</h3>
-                    <p>
-                      <strong>Ecosystem:</strong> {grant.ecosystem}
-                    </p>
-                    <p>
-                      <strong>Description:</strong> {grant.description}
-                    </p>
-                    <p>
-                      <strong>Funding Type:</strong> {grant.fundingType}
-                    </p>
-                    <p>
-                      <strong>Max Funding:</strong> {grant.maxFunding}
-                    </p>
-                    <a
-                      href={grant.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline">
-                      Website
-                    </a>
+                    <p><strong>Ecosystem:</strong> {grant.ecosystem}</p>
+                    <p><strong>Description:</strong> {grant.description}</p>
+                    <p><strong>Funding Type:</strong> {grant.fundingType}</p>
+                    <p><strong>Max Funding:</strong> {grant.maxFunding}</p>
+                    <a href={grant.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Website</a>
                   </div>
                 ));
               }
 
               if (msg.type === "text") {
-                const structuredGrants = msg.content
-                  ?.split(/\n+/)
-                  .map((line) => {
-                    const match = line.match(
-                      /\*\*(.*?) Grants?\*\*.*?- Website:.*?\((https?:\/\/.*?)\)/
-                    );
-                    if (!match) return null;
-                    return {
-                      grantProgramName: match[1].trim(),
-                      description: line.replace(/\*\*.*?\*\*.*?- Website:.*/, "").trim(),
-                      website: match[2].trim(),
-                    };
-                  })
-                  .filter(Boolean);
-
-                if (structuredGrants.length > 0) {
-                  return structuredGrants.map((grant, i) => (
-                    <div key={`${idx}-${i}`} className="p-4 bg-white border rounded shadow-sm">
-                      <h3 className="font-bold text-lg">{grant.grantProgramName}</h3>
-                      <p>
-                        <strong>Description:</strong> {grant.description}
-                      </p>
-                      <a
-                        href={grant.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline">
-                        Website
-                      </a>
-                    </div>
-                  ));
-                }
-
-                const hasPriorGrants = messages.some((m, i) => i < idx && m.type === "grants");
-
-                if (hasPriorGrants) return null;
-
                 return (
-                  <div
-                    key={idx}
-                    className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
-                    <div
-                      className={`inline-block px-3 py-2 rounded-xl shadow-lg ${
-                        msg.role === "user"
-                          ? "bg-[#3D5A99] text-white rounded-tr-none"
-                          : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"
-                      }`}>
+                  <div key={idx} className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                    <div className={`inline-block px-3 py-2 rounded-xl shadow-lg ${msg.role === "user" ? "bg-[#3D5A99] text-white rounded-tr-none" : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"}`}>
                       {msg.content}
                     </div>
                   </div>
@@ -246,8 +215,7 @@ export default function ChatbotContainer() {
             <Button
               onClick={handleSend}
               disabled={isLoading}
-              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-white hover:text-[#3D5A99] transition-all
-              [&_svg]:size-5 flex items-center justify-center">
+              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-white hover:text-[#3D5A99] transition-all [&_svg]:size-5 flex items-center justify-center">
               {isLoading ? (
                 <RotateCcw className="animate-[spin_1s_linear_infinite_reverse]" />
               ) : (
