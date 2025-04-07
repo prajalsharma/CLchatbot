@@ -225,7 +225,17 @@ const Board = () => {
       </div>
       <div className="flex justify-center items-center gap-4 mt-4">
         <button
-          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50"
+          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
+          onClick={() => {
+            setCurrentPage(1);
+            window.scrollTo({ top: 100 });
+          }}
+          disabled={currentPage === 1}>
+          First
+        </button>
+
+        <button
+          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
           onClick={() => {
             setCurrentPage((prev) => Math.max(prev - 1, 1));
             window.scrollTo({ top: 100 });
@@ -235,13 +245,22 @@ const Board = () => {
         </button>
         <span className="text-white bg-[#151226] rounded px-4 py-2">{currentPage}</span>
         <button
-          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50"
+          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
           onClick={() => {
             setCurrentPage((prev) => Math.min(prev + 1, totalPages));
             window.scrollTo({ top: 100 });
           }}
           disabled={currentPage === totalPages}>
           Next
+        </button>
+        <button
+          className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
+          onClick={() => {
+            setCurrentPage(totalPages);
+            window.scrollTo({ top: 100 });
+          }}
+          disabled={currentPage === totalPages}>
+          Last
         </button>
       </div>
     </div>
