@@ -15,6 +15,18 @@ h1 {
   letter-spacing: -0.175rem;
 }
 
+.custom-substack-widget {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex-wrap: nowrap !important;
+
+  @apply !rounded-md !border-none;
+
+  button {
+    @apply !bg-gradient-to-r !border-solid !border !from-[#253B6E] !to-[#1A2B50] !border-[#3D5A99] hover:!bg-[#1A2B50] hover:!border-[#58A6FF] transition-all !rounded-e-md;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
