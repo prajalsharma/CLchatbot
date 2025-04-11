@@ -6,7 +6,6 @@ import { RotateCcw, Send } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { print_details_on_console } from "./chatBotUtils/utils";
 
-const url = process.env.NEXT_PUBLIC_VITE_URL;
 
 type MessageType =
   | {
@@ -24,6 +23,9 @@ type MessageType =
         fundingType: string;
         maxFunding: string;
         website: string;
+        minFunding?: string;
+        status?: string;
+        fundingTopics?: string;
       }[];
     };
 
@@ -34,6 +36,7 @@ export default function ChatbotContainer() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [hasShownGreeting, setHasShownGreeting] = useState<boolean>(false);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [fetchingGrants, setFetchingGrants] = useState<boolean>(false);
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const scrollToBottom = () => {
@@ -44,24 +47,22 @@ export default function ChatbotContainer() {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  // THIS PART
+  useEffect(() => {
+    const initThread = async () => {
+      try {
+        const res = await fetch("/api/chat/thread", {
+          method: "POST",
+        });
+        const data: { threadId: string } = await res.json();
+        console.log("threadId:", data.threadId);
+        setThreadId(data.threadId);
+      } catch (err) {
+        console.error("Failed to create thread:", err);
+      }
+    };
 
-  // useEffect(() => {
-  //   const initThread = async () => {
-  //     try {
-  //       const res = await fetch(`${url}/api/chat/thread`, {
-  //         method: "POST",
-  //       });
-  //       const data: { threadId: string } = await res.json();
-  //       console.log("threadId:", data.threadId);
-  //       setThreadId(data.threadId);
-  //     } catch (err) {
-  //       console.error("Failed to create thread:", err);
-  //     }
-  //   };
-
-  //   initThread();
-  // }, []);
+    initThread();
+  }, []);
 
   useEffect(() => {
     if (isOpen && !hasShownGreeting && threadId) {
@@ -92,7 +93,7 @@ export default function ChatbotContainer() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${url}/api/chat/message`, {
+      const res = await fetch("/api/chat/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,47 +116,90 @@ export default function ChatbotContainer() {
           if (toolCall.name === "print_details_on_console") {
             const details = toolCall.arguments.details;
 
-            const response = await print_details_on_console(
-              details.ecosystem,
-              details.category,
-              details.fundingType,
-              details.fundingAmount,
-              details.projectDescription
-            );
+            // Show a loading message for grants
+            setMessages((prev) => [
+              ...prev,
+              {
+                type: "text",
+                role: "assistant",
+                content: "Searching for matching grants...",
+              },
+            ]);
 
-            console.log("final response from print_details_on_console:", response);
+            setFetchingGrants(true);
 
-            //  GETTING ERROR FOR THIS
+            try {
+              const response = await print_details_on_console(
+                details.ecosystem,
+                details.category,
+                details.fundingType,
+                details.fundingAmount,
+                details.projectDescription
+              );
 
-            // setMessages((prev) => [
-            //     ...prev,
-            //     {
-            //         type: "grants",
-            //         role: "assistant",
-            //         grants: response,
-            //     },
-            // ]);
+              console.log(
+                "final response from print_details_on_console:",
+                response
+              );
 
-            if (response && response.length > 0) {
+              if (response && response.length > 0) {
+                // Add a text message first
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    type: "text",
+                    role: "assistant",
+                    content: "Here are some grants that match your project:",
+                  },
+                  // Then add the grants data
+                  {
+                    type: "grants",
+                    role: "assistant",
+                    grants: response.map((grant) => ({
+                      grantProgramName:
+                        grant.grantProgramName || "Unknown Grant",
+                      ecosystem: grant.ecosystem || "Various",
+                      description:
+                        grant.description || "No description available",
+                      fundingType: grant.fundingType || "Not specified",
+                      maxFunding: grant.maxFunding || "Not specified",
+                      minFunding: grant.minFunding || "Not specified",
+                      website: grant.website || "#",
+                      status: grant.status || "Unknown",
+                      fundingTopics: grant.fundingTopics || "Various",
+                    })),
+                  },
+                  {
+                    type: "text",
+                    role: "assistant",
+                    content:
+                      "Let me know if you'd like more information about any of these grants, or if you want to refine your search.",
+                  },
+                ]);
+              } else {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    type: "text",
+                    role: "assistant",
+                    content:
+                      "I couldn't find any grants matching your criteria. Let's try refining your search. Could you provide more details about your project?",
+                  },
+                ]);
+              }
+            } catch (err) {
+              console.error("Error fetching grants:", err);
               setMessages((prev) => [
                 ...prev,
                 {
                   type: "text",
                   role: "assistant",
                   content:
-                    "Here are some grants that match your project. Let me know if you'd like more information about any of them, or if you want to refine your search.",
+                    "I encountered an error while searching for grants. Please try again with different criteria.",
                 },
               ]);
-            } else {
-              setMessages((prev) => [
-                ...prev,
-                {
-                  type: "text",
-                  role: "assistant",
-                  content:
-                    "I couldn't find any grants matching your criteria. Let's try refining your search. Could you provide more details about your project?",
-                },
-              ]);
+            } finally {
+              setFetchingGrants(false);
             }
           }
         } else {
@@ -200,15 +244,18 @@ export default function ChatbotContainer() {
 
   return (
     <div className="bg-[#121C38] text-white p-6 rounded-xl shadow-lg border border-[#1F2A50] w-full lg:max-w-md text-center lg:text-left">
-      <h2 className="text-xl font-bold text-[#EAEAEA]">AI Grant Matcher Tool</h2>
+      <h2 className="text-xl font-bold text-[#EAEAEA]">
+        AI Grant Matcher Tool
+      </h2>
       <p className="text-sm text-[#A1B1E1] mt-2">
-        Our AI assistant will match your project with the ideal grant opportunity.
+        Our AI assistant will match your project with the ideal grant
+        opportunity.
       </p>
 
       {!isOpen && (
         <p className="mt-4 text-[#EAEAEA] bg-[#1A2B50] p-3 rounded-lg border border-[#253B6E]">
-          Hello! I'm your AI grant matcher assistant. Enter your project details and I'll help you
-          find the perfect grant opportunities.
+          Hello! I'm your AI grant matcher assistant. Enter your project details
+          and I'll help you find the perfect grant opportunities.
         </p>
       )}
 
@@ -216,7 +263,8 @@ export default function ChatbotContainer() {
         <SheetTrigger asChild>
           <Button
             onClick={() => setIsOpen(true)}
-            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all">
+            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all"
+          >
             Find Grants
           </Button>
         </SheetTrigger>
@@ -231,58 +279,127 @@ export default function ChatbotContainer() {
           <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-none">
             {messages.map((msg, idx) => {
               if (msg.type === "grants") {
-                return msg.grants.map((grant, i) => (
-                  <div
-                    key={`${idx}-${i}`}
-                    className="p-4 bg-[#1A2B50] border border-[#253B6E] rounded-lg shadow-sm text-[#EAEAEA] my-3">
-                    <h3 className="font-bold text-lg text-[#A1B1E1]">{grant.grantProgramName}</h3>
-                    <p className="mt-2">
-                      <strong className="text-[#A1B1E1]">Ecosystem:</strong> {grant.ecosystem}
-                    </p>
-                    <p>
-                      <strong className="text-[#A1B1E1]">Description:</strong> {grant.description}
-                    </p>
-                    <p>
-                      <strong className="text-[#A1B1E1]">Funding Type:</strong> {grant.fundingType}
-                    </p>
-                    <p>
-                      <strong className="text-[#A1B1E1]">Max Funding:</strong> {grant.maxFunding}
-                    </p>
-                    <a
-                      href={grant.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#58A6FF] hover:text-[#A1B1E1] underline mt-2 inline-block">
-                      Website
-                    </a>
+                return (
+                  <div key={`grants-${idx}`} className="space-y-4 my-4">
+                    {msg.grants.map((grant, i) => (
+                      <div
+                        key={`grant-${idx}-${i}`}
+                        className="p-4 bg-[#1A2B50] border border-[#253B6E] rounded-lg shadow-sm text-[#EAEAEA]"
+                      >
+                        <h3 className="font-bold text-lg text-[#A1B1E1]">
+                          {grant.grantProgramName}
+                        </h3>
+                        <div className="mt-2 space-y-1">
+                          <p>
+                            <strong className="text-[#A1B1E1]">
+                              Ecosystem:
+                            </strong>{" "}
+                            {grant.ecosystem}
+                          </p>
+                          {grant.fundingTopics && (
+                            <p>
+                              <strong className="text-[#A1B1E1]">
+                                Topics:
+                              </strong>{" "}
+                              {grant.fundingTopics}
+                            </p>
+                          )}
+                          <p>
+                            <strong className="text-[#A1B1E1]">
+                              Description:
+                            </strong>{" "}
+                            {grant.description}
+                          </p>
+                          <p>
+                            <strong className="text-[#A1B1E1]">
+                              Funding Type:
+                            </strong>{" "}
+                            {grant.fundingType}
+                          </p>
+                          <p className="flex flex-wrap gap-1">
+                            <strong className="text-[#A1B1E1]">Funding:</strong>{" "}
+                            {grant.minFunding &&
+                            grant.minFunding !== "Not specified" ? (
+                              <span>
+                                {grant.minFunding} - {grant.maxFunding}
+                              </span>
+                            ) : (
+                              <span>Up to {grant.maxFunding}</span>
+                            )}
+                          </p>
+                          {grant.status && (
+                            <p>
+                              <strong className="text-[#A1B1E1]">
+                                Status:
+                              </strong>{" "}
+                              <span
+                                className={`${
+                                  grant.status === "Active"
+                                    ? "text-green-400"
+                                    : "text-yellow-400"
+                                }`}
+                              >
+                                {grant.status}
+                              </span>
+                            </p>
+                          )}
+                          <a
+                            href={grant.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#58A6FF] hover:text-[#A1B1E1] underline mt-2 inline-block"
+                          >
+                            Visit Website
+                          </a>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ));
+                );
               }
 
               return (
                 <div
-                  key={idx}
-                  className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                  key={`message-${idx}`}
+                  className={`text-sm ${
+                    msg.role === "user" ? "text-right" : "text-left"
+                  }`}
+                >
                   <div
                     className={`inline-block px-3 py-2 rounded-xl shadow-lg ${
                       msg.role === "user"
                         ? "bg-[#3D5A99] text-white rounded-tr-none"
                         : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"
-                    }`}>
+                    }`}
+                  >
                     {msg.content}
                   </div>
                 </div>
               );
             })}
 
-            {isLoading && (
+            {(isLoading || fetchingGrants) && (
               <div className="text-left text-sm">
                 <div className="inline-block px-3 py-4 rounded-xl shadow-lg bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none animate-pulse">
-                  <span className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce" />
-                  </span>
+                  {fetchingGrants ? (
+                    <div className="flex flex-col gap-2">
+                      <span className="flex items-center gap-2">
+                        Searching for grants
+                        <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce" />
+                      </span>
+                      <span className="text-xs text-[#A1B1E1]">
+                        This may take a moment
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce" />
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -302,13 +419,16 @@ export default function ChatbotContainer() {
                   handleSendMessage();
                 }
               }}
-              disabled={isLoading || !threadId}
+              disabled={isLoading || fetchingGrants || !threadId}
             />
             <Button
               onClick={handleSendMessage}
-              disabled={isLoading || !prompt.trim() || !threadId}
-              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-[#253B6E] transition-all [&_svg]:size-5 flex items-center justify-center">
-              {isLoading ? (
+              disabled={
+                isLoading || fetchingGrants || !prompt.trim() || !threadId
+              }
+              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-[#253B6E] transition-all [&_svg]:size-5 flex items-center justify-center"
+            >
+              {isLoading || fetchingGrants ? (
                 <RotateCcw className="animate-[spin_1s_linear_infinite_reverse]" />
               ) : (
                 <Send />

@@ -3,7 +3,9 @@ import * as tf from "@tensorflow/tfjs";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
 import OpenAI from "openai";
 import grants from "../data/grants.json";
+import { cosineSimilarity } from "@/components/ChatBot/chatBotUtils/utils";
 
+// Shift this to api
 const apiKey = import.meta.env.VITE_OPENAI_KEY;
 
 const openai = new OpenAI({
@@ -108,7 +110,7 @@ Do not offer to search for additional opportunities online.
 Do not use the 'date' column from the Excel file.
 `.trim();
 
-  const messages = [
+  const messages: { role: "system" | "user" | "assistant"; content: string; name?: string }[] = [
     { role: "system", content: systemMessage },
     { role: "user", content: userInput },
     ...(topGrants?.length > 0

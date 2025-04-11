@@ -56,7 +56,7 @@ const handleConsole = async (userQueryString: string): Promise<Grant[] | undefin
 };
 
 async function getUserEmbedding(text: string): Promise<number[]> {
-  const res = await fetch(`${url}/api/embed`, {
+  const res = await fetch('/api/embed', {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -90,7 +90,7 @@ function findTopMatches(userEmbedding: number[], grantEmbeddings: Grant[], topK 
   return similarities.slice(0, topK);
 }
 
-function cosineSimilarity(a: number[], b: number[]): number {
+export function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) {
     throw new Error("Vectors must be of same length");
   }
