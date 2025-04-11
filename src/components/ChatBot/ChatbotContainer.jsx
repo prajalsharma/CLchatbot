@@ -4,6 +4,9 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { RotateCcw, Send } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { cn } from "@/lib/utils";
+import { print_details_on_console } from "./chatBotUtils/utils";
+
 
 // Here are the 8 required questions from your system prompt:
 const QUESTIONS = [
@@ -35,6 +38,8 @@ export default function ChatbotContainer() {
   const [messages, setMessages] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasShownGreeting, setHasShownGreeting] = useState(false);
+  const [threadId, setThreadId] = useState(null);
 
   // We'll store user answers to each question
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState({
@@ -59,6 +64,83 @@ export default function ChatbotContainer() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // for init-ing the thread for each session
+  useEffect(() => {
+    const initThread = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/chat/thread", {
+          method: "POST",
+        });
+        const data = await res.json();
+        console.log("threadId:", data.threadId);
+        setThreadId(data.threadId);
+      } catch (err) {
+        console.error("Failed to create thread:", err);
+      }
+    };
+
+    initThread();
+  }, []);
+
+  const handleSendMessage = async (message) => {
+    const res = await fetch("http://localhost:3000/api/chat/message", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        thread_id: threadId,
+        message:
+          "1. Gulshan, 2. Aleo, zk centic zk application from Paris, 3. Ethereum , 4. MVP, 5. DeFi, 6. Open Grants 7. 10000",
+      }),
+    });
+
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      console.log("Parsed data:", data);
+
+      // Tool call required
+      if (data.tool_call_required) {
+        const toolCall = data.tool_call;
+        console.log("Tool call from Assistant:", toolCall);
+
+        if (toolCall.name === "print_details_on_console") {
+          const details = toolCall.arguments.details;
+
+          print_details_on_console(
+            details.ecosystem,
+            details.category,
+            details.fundingType,
+            details.fundingAmount,
+            details.projectDescription
+          );
+        }
+      } else {
+        console.log("Assistant Reply:", data.reply);
+      }
+    } catch (err) {
+      console.error("Failed to parse JSON:", text);
+    }
+  };
+
+  // This function shows the greeting when the dialog opens
+  useEffect(() => {
+    if (isOpen && !hasShownGreeting) {
+      // Initialize with a greeting message when dialog opens for the first time
+      setMessages([
+        {
+          role: "assistant",
+          content:
+            "Hello! I'm your AI grant matcher assistant. I'll help you find the perfect grant opportunities for your project. Let's get started with a few questions about your project. " +
+            QUESTIONS[0],
+          type: "text",
+        },
+      ]);
+      setHasShownGreeting(true);
+    }
+  }, [isOpen, hasShownGreeting]);
 
   // This function is called every time the user hits "Enter" or clicks the Send button
   const handleSend = async () => {
@@ -101,7 +183,9 @@ export default function ChatbotContainer() {
       }
 
       // Check if we have all answers
-      const allAnswered = Object.values(questionnaireAnswers).every((val) => val.trim() !== "");
+      const allAnswered = Object.values(questionnaireAnswers).every(
+        (val) => val.trim() !== ""
+      );
       if (allAnswered) {
         // We can do the final matching
         await doFinalGrantMatching();
@@ -205,7 +289,7 @@ export default function ChatbotContainer() {
         ]);
       }
 
-      // Show GPT's final message if it’s not empty
+      // Show GPT's final message if it's not empty
       if (reply && reply.trim()) {
         setMessages((prev) => [
           ...prev,
@@ -225,28 +309,59 @@ export default function ChatbotContainer() {
     }
   };
 
-  // On mount, we ask the *first* question
-  useEffect(() => {
-    // Only if we have zero messages, ask the first question
-    if (messages.length === 0) {
-      setMessages([
-        {
-          role: "assistant",
-          content: QUESTIONS[0], // "What's your name?"
-          type: "text",
-        },
-      ]);
-    }
-  }, []);
+  // Removed the initial useEffect that was automatically showing the first question
+
+  // const handleConsole = async (userQueryString) => {
+  //   console.log("Current answers:", questionnaireAnswers);
+  //   console.log("Current question index:", currentQuestionIndex);
+  //   console.log("Messages:", messages);
+  //   console.log("Prompt:", prompt);
+  //   console.log("Thread ID:", threadId);
+  //   const userQueryString = Object.entries(questionnaireAnswers)
+  //     .map(([key, value]) => `${capitalize(key)}: ${value}`)
+  //     .join("\n");
+
+  //   function capitalize(str) {
+  //     return str.charAt(0).toUpperCase() + str.slice(1);
+  //   }
+
+  //   console.log("User Query String:", userQueryString);
+  //   try {
+  //     const userEmbedding = await getUserEmbedding(userQueryString);
+  //     console.log("✅ User Embedding:", userEmbedding);
+  //     try {
+  //       const embeddedGrants = await loadEmbeddedGrants();
+  //       const matches = findTopMatches(userEmbedding, embeddedGrants);
+  //       console.log("🎯 Top matches:", matches);
+  //     } catch (error) {
+  //       console.error("Error in handleConsole: in cosine similarity", error);
+  //     }
+  //   } catch (err) {
+  //     console.error("❌ Error getting embedding:", err);
+  //   }
+  // };
 
   return (
     <div className="bg-[#121C38] text-white p-6 rounded-xl shadow-lg border border-[#1F2A50] w-full lg:max-w-md text-center lg:text-left">
-      <h2 className="text-xl font-bold text-[#EAEAEA]">AI Grant Matcher Tool</h2>
+      <h2 className="text-xl font-bold text-[#EAEAEA]">
+        AI Grant Matcher Tool
+      </h2>
       <p className="text-sm text-[#A1B1E1] mt-2">
-        Our AI assistant will match your project with the ideal grant opportunity.
+        Our AI assistant will match your project with the ideal grant
+        opportunity.
       </p>
 
-      <Textarea
+      {/* Show a greeting message when dialog is closed */}
+      {!isOpen && (
+        <p className="mt-4 text-[#EAEAEA] bg-[#1A2B50] p-3 rounded-lg border border-[#253B6E]">
+          Hello! I'm your AI grant matcher assistant. Enter your project details
+          and I'll help you find the perfect grant opportunities. (here goes any
+          text you want as first text of the thread)
+        </p>
+      )}
+
+      {/* uncomment this according to UX */}
+      {/* <Textarea
         className="mt-4 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none h-12"
         placeholder="Ask about grants..."
         value={prompt}
@@ -258,16 +373,16 @@ export default function ChatbotContainer() {
             setIsOpen(true);
           }
         }}
-      />
+      /> */}
 
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button
             onClick={() => {
-              handleSend();
               setIsOpen(true);
             }}
-            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all">
+            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all"
+          >
             Find Grants
           </Button>
         </SheetTrigger>
@@ -285,8 +400,13 @@ export default function ChatbotContainer() {
               if (msg.type === "grants") {
                 // Show the matched grants
                 return msg.grants.map((grant, i) => (
-                  <div key={`${idx}-${i}`} className="p-4 bg-white border rounded shadow-sm">
-                    <h3 className="font-bold text-lg">{grant.grantProgramName}</h3>
+                  <div
+                    key={`${idx}-${i}`}
+                    className="p-4 bg-white border rounded shadow-sm"
+                  >
+                    <h3 className="font-bold text-lg">
+                      {grant.grantProgramName}
+                    </h3>
                     <p>
                       <strong>Ecosystem:</strong> {grant.ecosystem}
                     </p>
@@ -303,7 +423,8 @@ export default function ChatbotContainer() {
                       href={grant.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 underline">
+                      className="text-blue-600 underline"
+                    >
                       Website
                     </a>
                   </div>
@@ -313,13 +434,17 @@ export default function ChatbotContainer() {
               return (
                 <div
                   key={idx}
-                  className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                  className={`text-sm ${
+                    msg.role === "user" ? "text-right" : "text-left"
+                  }`}
+                >
                   <div
                     className={`inline-block px-3 py-2 rounded-xl shadow-lg ${
                       msg.role === "user"
                         ? "bg-[#3D5A99] text-white rounded-tr-none"
                         : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"
-                    }`}>
+                    }`}
+                  >
                     {msg.content}
                   </div>
                 </div>
@@ -357,7 +482,8 @@ export default function ChatbotContainer() {
             <Button
               onClick={handleSend}
               disabled={isLoading}
-              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-white hover:text-[#3D5A99] transition-all [&_svg]:size-5 flex items-center justify-center">
+              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-white hover:text-[#3D5A99] transition-all [&_svg]:size-5 flex items-center justify-center"
+            >
               {isLoading ? (
                 <RotateCcw className="animate-[spin_1s_linear_infinite_reverse]" />
               ) : (
@@ -367,6 +493,7 @@ export default function ChatbotContainer() {
           </div>
         </SheetContent>
       </Sheet>
+      <button onClick={handleSendMessage}>click me for more infos</button>
     </div>
   );
 }

@@ -1,11 +1,13 @@
-import '@tensorflow/tfjs-backend-webgl';
-import * as tf from '@tensorflow/tfjs';
-import * as use from '@tensorflow-models/universal-sentence-encoder';
-import OpenAI from 'openai';
-import grants from '../data/grants.json';
+import "@tensorflow/tfjs-backend-webgl";
+import * as tf from "@tensorflow/tfjs";
+import * as use from "@tensorflow-models/universal-sentence-encoder";
+import OpenAI from "openai";
+import grants from "../data/grants.json";
+
+const apiKey;
 
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_KEY,
+  apiKey: apiKey,
   dangerouslyAllowBrowser: true,
 });
 
@@ -13,34 +15,31 @@ let model: use.UniversalSentenceEncoder | null = null;
 
 export async function initModel() {
   if (!model) {
-    await tf.setBackend('webgl');
+    await tf.setBackend("webgl");
     await tf.ready();
     model = await use.load();
   }
 }
 
-function cosineSimilarity(a: number[], b: number[]): number {
-  const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
-  const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-  const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-  return dot / (magA * magB);
-}
-
 export async function matchGrants(userInput: string, topK = 5) {
   await initModel();
 
-  let ecosystemValue = '';
-  const lines = userInput.split('\n');
+  let ecosystemValue = "";
+  const lines = userInput.split("\n");
   for (const line of lines) {
     const lower = line.toLowerCase().trim();
-    if (lower.startsWith('ecosystem:')) {
-      ecosystemValue = lower.replace('ecosystem:', '').trim();
+    if (lower.startsWith("ecosystem:")) {
+      ecosystemValue = lower.replace("ecosystem:", "").trim();
       break;
     }
   }
 
   let filteredGrants = [...grants];
-  if (ecosystemValue && ecosystemValue !== 'any' && ecosystemValue !== 'skipped') {
+  if (
+    ecosystemValue &&
+    ecosystemValue !== "any" &&
+    ecosystemValue !== "skipped"
+  ) {
     filteredGrants = filteredGrants.filter((g) =>
       g.ecosystem?.toLowerCase().includes(ecosystemValue)
     );
@@ -110,8 +109,8 @@ Do not use the 'date' column from the Excel file.
 `.trim();
 
   const messages = [
-    { role: 'system', content: systemMessage },
-    { role: 'user', content: userInput },
+    { role: "system", content: systemMessage },
+    { role: "user", content: userInput },
     ...(topGrants?.length > 0
       ? [] // Removed grants from assistant to prevent duplication
       : []),
@@ -119,14 +118,17 @@ Do not use the 'date' column from the Excel file.
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: "gpt-4o-mini",
       messages,
     });
 
-    let finalReply = response.choices[0]?.message?.content || '';
+    let finalReply = response.choices[0]?.message?.content || "";
     const lower = finalReply.toLowerCase();
 
-    if (!lower.includes('calendly.com/cornarolabs') || !lower.includes('marianna@cornarolabs.xyz')) {
+    if (
+      !lower.includes("calendly.com/cornarolabs") ||
+      !lower.includes("marianna@cornarolabs.xyz")
+    ) {
       finalReply += `
 \nWould you like to speak with a Web3 grants expert from our team for a free 30-minute consultation?\nCalendly: https://calendly.com/cornarolabs\nEmail: marianna@cornarolabs.xyz`;
     }
@@ -137,9 +139,9 @@ Do not use the 'date' column from the Excel file.
       history: messages,
     };
   } catch (err: any) {
-    console.error('GPT ERROR:', err?.response?.data || err?.message || err);
+    console.error("GPT ERROR:", err?.response?.data || err?.message || err);
     return {
-      reply: 'Something went wrong with GPT.',
+      reply: "Something went wrong with GPT.",
       matchedGrants: [],
       history: messages,
     };

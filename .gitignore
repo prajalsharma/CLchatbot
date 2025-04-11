@@ -24,3 +24,12 @@ dist-ssr
 *.sw?
 .env
 test.js
+
+.vercel
+
+# my local file, feel free to uncomment it if you have same setup
+scripts/
+assistant.js
+function-calling.js
+server.js
+vercel.json
