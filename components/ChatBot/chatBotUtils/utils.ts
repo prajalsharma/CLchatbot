@@ -1,5 +1,3 @@
-const url = process.env.VITE_URL as string;
-
 interface Grant {
   embedding: number[];
   [key: string]: any;

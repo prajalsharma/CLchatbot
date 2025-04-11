@@ -6,7 +6,6 @@ import { RotateCcw, Send } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { print_details_on_console } from "./chatBotUtils/utils";
 
-
 type MessageType =
   | {
       type: "text";
@@ -105,16 +104,39 @@ export default function ChatbotContainer() {
       });
 
       const text = await res.text();
+
       try {
         const data = JSON.parse(text);
         console.log("Parsed data:", data);
+
+        if (res.status === 409) {
+          // Handle the case where a run is already in progress
+          setMessages((prev) => [
+            ...prev,
+            {
+              type: "text",
+              role: "assistant",
+              content:
+                "I'm still processing your previous request. Please wait a moment before sending a new message.",
+            },
+          ]);
+          return;
+        }
 
         if (data.tool_call_required) {
           const toolCall = data.tool_call;
           console.log("Tool call from Assistant:", toolCall);
 
+          const runId = toolCall.run_id;
+          const toolCallId = toolCall.tool_call_id;
+
+          console.log("Run ID:", runId);
+          console.log("Tool Call ID:", toolCallId);
+
           if (toolCall.name === "print_details_on_console") {
             const details = toolCall.arguments.details;
+            const runId = toolCall.run_id;
+            const toolCallId = toolCall.tool_call_id;
 
             // Show a loading message for grants
             setMessages((prev) => [
@@ -142,8 +164,36 @@ export default function ChatbotContainer() {
                 response
               );
 
+              try {
+                console.log("Sending tool_outputs:", {
+                  threadId,
+                  runId,
+                  toolCallId,
+                  results: response,
+                });
+
+                await fetch("/api/chat/toolOutput", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    thread_id: threadId,
+                    tool_outputs: {
+                      run_id: runId,
+                      tool_call_id: toolCallId,
+                      results: response,
+                    },
+                  }),
+                });
+
+                console.log("Tool outputs submitted successfully");
+              } catch (error) {
+                console.log("error in submitting tool outputs:", error);
+              }
+
               if (response && response.length > 0) {
-                // Add a text message first
+                // Add a text message first (keep it or remove as per need)
                 setMessages((prev) => [
                   ...prev,
                   {

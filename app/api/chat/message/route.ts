@@ -12,11 +12,31 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { thread_id, message } = body;
 
+    // Check if there's an active run before creating a new message
+    try {
+      const runs = await openai.beta.threads.runs.list(thread_id);
+      const activeRun = runs.data.find(
+        (run) =>
+          !["completed", "failed", "cancelled", "expired"].includes(run.status)
+      );
+
+      if (activeRun) {
+        return NextResponse.json(
+          { error: "Cannot send a new message while a run is in progress" },
+          { status: 409 }
+        );
+      }
+    } catch (error) {
+      console.error("Error checking active runs:", error);
+    }
+
+    // Add user message to thread
     await openai.beta.threads.messages.create(thread_id, {
       role: "user",
       content: message,
     });
 
+    // Create a new run
     const run = await openai.beta.threads.runs.create(thread_id, {
       assistant_id: ASSISTANT_ID,
     });
@@ -31,7 +51,6 @@ export async function POST(req: Request) {
       if (runStatus.status === "requires_action") {
         const toolCall =
           runStatus.required_action?.submit_tool_outputs?.tool_calls[0];
-
         if (toolCall) {
           const { name, arguments: args } = toolCall.function;
           return NextResponse.json({
@@ -39,6 +58,8 @@ export async function POST(req: Request) {
             tool_call: {
               name,
               arguments: JSON.parse(args),
+              run_id: runStatus.id,
+              tool_call_id: toolCall.id,
             },
           });
         }
