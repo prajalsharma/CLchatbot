@@ -6,7 +6,7 @@ import grants from "../data/grants.json";
 import { cosineSimilarity } from "@/components/ChatBot/chatBotUtils/utils";
 
 // Shift this to api
-const apiKey = import.meta.env.VITE_OPENAI_KEY;
+const apiKey = '';
 
 const openai = new OpenAI({
   apiKey: apiKey,
