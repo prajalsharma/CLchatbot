@@ -1,3 +1,5 @@
+const url = import.meta.env.VITE_URL;
+
 export const print_details_on_console = (
   ecosystem,
   category,
@@ -29,11 +31,11 @@ export const print_details_on_console = (
   function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
-
-  handleConsole(userQueryString);
-
-  // Log it with the header
   console.log("Details of user from chatgpt:\n" + userQueryString);
+
+  const top5matches = handleConsole(userQueryString);
+
+  return top5matches;
 };
 
 const handleConsole = async (userQueryString) => {
@@ -45,6 +47,8 @@ const handleConsole = async (userQueryString) => {
       const embeddedGrants = await loadEmbeddedGrants();
       const matches = findTopMatches(userEmbedding, embeddedGrants);
       console.log("🎯 Top matches:", matches);
+
+      return matches;
     } catch (error) {
       console.error("Error in handleConsole: in cosine similarity", error);
     }
@@ -54,7 +58,7 @@ const handleConsole = async (userQueryString) => {
 };
 
 async function getUserEmbedding(text) {
-  const res = await fetch("http://localhost:3000/api/embed", {
+  const res = await fetch(`${url}/api/embed`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -89,7 +93,6 @@ function findTopMatches(userEmbedding, grantEmbeddings, topK = 5) {
 
   return similarities.slice(0, topK); // return top matches
 }
-
 
 function cosineSimilarity(a, b) {
   if (a.length !== b.length) {

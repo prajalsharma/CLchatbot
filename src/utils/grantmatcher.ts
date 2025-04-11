@@ -4,7 +4,7 @@ import * as use from "@tensorflow-models/universal-sentence-encoder";
 import OpenAI from "openai";
 import grants from "../data/grants.json";
 
-const apiKey;
+const apiKey = import.meta.env.VITE_OPENAI_KEY;
 
 const openai = new OpenAI({
   apiKey: apiKey,
