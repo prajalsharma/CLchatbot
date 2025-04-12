@@ -20,20 +20,28 @@ async function loadModel() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { text } = body;
+    const textInput =
+      typeof body.text === "string" ? body.text : String(body.text);
 
-    if (!text) {
-      return NextResponse.json({ error: "Missing 'text' field" }, { status: 400 });
+    if (!textInput) {
+      return NextResponse.json(
+        { error: "Missing 'text' field" },
+        { status: 400 }
+      );
     }
 
     const model = await loadModel();
-    const embeddings = await model.embed([text]);
+    console.log("📦 Input to embedding model:", textInput);
+    const embeddings = await model.embed([textInput]);
     const array = await embeddings.array();
     const embedding = array[0];
 
     return NextResponse.json({ embedding }, { status: 200 });
   } catch (err) {
     console.error("❌ Error generating embedding:", err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
