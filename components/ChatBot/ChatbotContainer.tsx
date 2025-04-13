@@ -36,8 +36,8 @@ export default function ChatbotContainer() {
   const [hasShownGreeting, setHasShownGreeting] = useState<boolean>(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [fetchingGrants, setFetchingGrants] = useState<boolean>(false);
-
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -59,7 +59,6 @@ export default function ChatbotContainer() {
         console.error("Failed to create thread:", err);
       }
     };
-
     initThread();
   }, []);
 
@@ -79,18 +78,15 @@ export default function ChatbotContainer() {
 
   const handleSendMessage = async () => {
     if (!prompt.trim() || !threadId || isLoading) return;
-
     const userMessage: MessageType = {
       role: "user",
       content: prompt.trim(),
       type: "text",
     };
     setMessages((prev) => [...prev, userMessage]);
-
     const userText = prompt.trim();
     setPrompt("");
     setIsLoading(true);
-
     try {
       const res = await fetch("/api/chat/message", {
         method: "POST",
@@ -102,13 +98,10 @@ export default function ChatbotContainer() {
           message: userText,
         }),
       });
-
       const text = await res.text();
-
       try {
         const data = JSON.parse(text);
         console.log("Parsed data:", data);
-
         if (res.status === 409) {
           // Handle the case where a run is already in progress
           setMessages((prev) => [
@@ -122,22 +115,17 @@ export default function ChatbotContainer() {
           ]);
           return;
         }
-
         if (data.tool_call_required) {
           const toolCall = data.tool_call;
           console.log("Tool call from Assistant:", toolCall);
-
           const runId = toolCall.run_id;
           const toolCallId = toolCall.tool_call_id;
-
           console.log("Run ID:", runId);
           console.log("Tool Call ID:", toolCallId);
-
           if (toolCall.name === "print_details_on_console") {
             const details = toolCall.arguments.details;
             const runId = toolCall.run_id;
             const toolCallId = toolCall.tool_call_id;
-
             // Show a loading message for grants
             setMessages((prev) => [
               ...prev,
@@ -147,9 +135,7 @@ export default function ChatbotContainer() {
                 content: "Searching for matching grants...",
               },
             ]);
-
             setFetchingGrants(true);
-
             try {
               const response = await print_details_on_console(
                 details.ecosystem,
@@ -158,12 +144,10 @@ export default function ChatbotContainer() {
                 details.fundingAmount,
                 details.projectDescription
               );
-
               console.log(
                 "final response from print_details_on_console:",
                 response
               );
-
               try {
                 console.log("Sending tool_outputs:", {
                   threadId,
@@ -171,7 +155,6 @@ export default function ChatbotContainer() {
                   toolCallId,
                   results: response,
                 });
-
                 await fetch("/api/chat/toolOutput", {
                   method: "POST",
                   headers: {
@@ -186,56 +169,62 @@ export default function ChatbotContainer() {
                     },
                   }),
                 });
-
                 console.log("Tool outputs submitted successfully");
               } catch (error) {
                 console.log("error in submitting tool outputs:", error);
               }
-
               if (response && response.length > 0) {
-                // Add a text message first (keep it or remove as per need)
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    type: "text",
-                    role: "assistant",
-                    content: "Here are some grants that match your project:",
-                  },
-                  // Then add the grants data
-                  {
-                    type: "grants",
-                    role: "assistant",
-                    grants: response.map((grant) => ({
-                      grantProgramName:
-                        grant.grantProgramName || "Unknown Grant",
-                      ecosystem: grant.ecosystem || "Various",
-                      description:
-                        grant.description || "No description available",
-                      fundingType: grant.fundingType || "Not specified",
-                      maxFunding: grant.maxFunding || "Not specified",
-                      minFunding: grant.minFunding || "Not specified",
-                      website: grant.website || "#",
-                      status: grant.status || "Unknown",
-                      fundingTopics: grant.fundingTopics || "Various",
-                    })),
-                  },
-                  {
-                    type: "text",
-                    role: "assistant",
-                    content:
-                      "Let me know if you'd like more information about any of these grants, or if you want to refine your search.",
-                  },
-                ]);
-              } else {
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    type: "text",
-                    role: "assistant",
-                    content:
-                      "I couldn't find any grants matching your criteria. Let's try refining your search. Could you provide more details about your project?",
-                  },
-                ]);
+                // filter grants based on similarity (less than 0.6)
+                const filteredGrants = response.filter(
+                  (grant) => grant.similarity >= 0.6
+                );
+
+                if (filteredGrants.length > 0) {
+                  const formattedGrants = filteredGrants.map((grant) => ({
+                    grantProgramName:
+                      grant.original.grantProgramName || "Unknown Grant",
+                    ecosystem: grant.original.ecosystem || "Various",
+                    description:
+                      grant.original.description || "No description available",
+                    fundingType: grant.original.fundingType || "Not specified",
+                    maxFunding: grant.original.maxFunding || "Not specified",
+                    minFunding: grant.original.minFunding || "Not specified",
+                    website: grant.original.website || "#",
+                    status: grant.original.status || "Unknown",
+                    fundingTopics: grant.original.fundingTopics || "Various",
+                  }));
+
+                  // Add response messages
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      type: "text",
+                      role: "assistant",
+                      content: "Here are some grants that match your project:",
+                    },
+                    {
+                      type: "grants",
+                      role: "assistant",
+                      grants: formattedGrants,
+                    },
+                    {
+                      type: "text",
+                      role: "assistant",
+                      content:
+                        "Let me know if you'd like more information about any of these grants, or if you want to refine your search.",
+                    },
+                  ]);
+                } else {
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      type: "text",
+                      role: "assistant",
+                      content:
+                        "None of the grants scored highly enough in similarity. Try adjusting your project description for better matches.",
+                    },
+                  ]);
+                }
               }
             } catch (err) {
               console.error("Error fetching grants:", err);
@@ -254,9 +243,7 @@ export default function ChatbotContainer() {
           }
         } else {
           console.log("Assistant Reply:", data.reply);
-
           const formattedReply = data.reply.replace(/\n\n+/g, "\n\n").trim();
-
           setMessages((prev) => [
             ...prev,
             {
@@ -301,14 +288,12 @@ export default function ChatbotContainer() {
         Our AI assistant will match your project with the ideal grant
         opportunity.
       </p>
-
       {!isOpen && (
         <p className="mt-4 text-[#EAEAEA] bg-[#1A2B50] p-3 rounded-lg border border-[#253B6E]">
           Hello! I'm your AI grant matcher assistant. Enter your project details
           and I'll help you find the perfect grant opportunities.
         </p>
       )}
-
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button
@@ -318,14 +303,12 @@ export default function ChatbotContainer() {
             Find Grants
           </Button>
         </SheetTrigger>
-
         <SheetContent className="w-full sm:max-w-[480px] p-0 bg-[#121C38] text-white border-l border-[#1F2A50] flex flex-col">
           <div className="p-4 flex justify-between items-center border-b border-[#1F2A50]">
             <h2 className="text-lg font-semibold text-[#EAEAEA]">
               <img src="/logo.png" className="w-44" alt="AI Grant Matcher" />
             </h2>
           </div>
-
           <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-none">
             {messages.map((msg, idx) => {
               if (msg.type === "grants") {
@@ -407,7 +390,6 @@ export default function ChatbotContainer() {
                   </div>
                 );
               }
-
               return (
                 <div
                   key={`message-${idx}`}
@@ -427,7 +409,6 @@ export default function ChatbotContainer() {
                 </div>
               );
             })}
-
             {(isLoading || fetchingGrants) && (
               <div className="text-left text-sm">
                 <div className="inline-block px-3 py-4 rounded-xl shadow-lg bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none animate-pulse">
@@ -453,10 +434,8 @@ export default function ChatbotContainer() {
                 </div>
               </div>
             )}
-
             <div ref={chatEndRef} />
           </div>
-
           <div className="p-4 border-t border-[#1F2A50] flex gap-2">
             <Textarea
               className="flex-1 bg-[#1A2B50] text-[#EAEAEA] placeholder-[#5E739E] border border-[#253B6E] rounded-lg focus:ring-2 focus:ring-[#58A6FF] resize-none"
