@@ -1,4 +1,6 @@
-// scripts/createAssistant.ts
+// this file is used to create a new assistant with tools and system prompt
+
+/* 
 import OpenAI from "openai";
 
 const openai = new OpenAI();
@@ -109,3 +111,5 @@ Final Notes:
 }
 
 createAssistant().catch(console.error);
+
+**/

@@ -1,4 +1,6 @@
-// Must come FIRST to register the backend
+// this file is used to create embeddings for the grant data for better search
+
+/** 
 import "@tensorflow/tfjs-node";
 
 import * as fs from "fs";
@@ -84,3 +86,5 @@ async function generateEmbeddingsFromFile() {
 }
 
 generateEmbeddingsFromFile().catch(console.error);
+
+*/
