@@ -1,6 +1,6 @@
 // this file is used to create a new assistant with tools and system prompt
 
-/* 
+/*
 import OpenAI from "openai";
 
 const openai = new OpenAI();
@@ -17,9 +17,33 @@ const tools = [
           details: {
             type: "object",
             properties: {
-              ecosystem: { type: "string" },
-              category: { type: "string" },
-              fundingType: { type: "string" },
+              ecosystem: {
+                oneOf: [
+                  { type: "string" },
+                  {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                ],
+              },
+              category: {
+                oneOf: [
+                  { type: "string" },
+                  {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                ],
+              },
+              fundingType: {
+                oneOf: [
+                  { type: "string" },
+                  {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                ],
+              },
               fundingAmount: { type: "number" },
               projectDescription: { type: "string" },
             },
@@ -65,10 +89,18 @@ Interaction Protocol:
     f. What type of funding are you looking for? (Open Grants, Quadratic Funding, Retroactive Grants, Hackathon Grants, Incubation and Acceleration, Matching Grants, etc.)  
     g. How much funding do you need?  
     h. Any additional notes?
+  
+2. If the user provides answers of ecosystem, category, funding type, or funding amount in more than on options, collect all the inputted options.
 
-2. Wait for the user's response to each question before proceeding to the next.
+3. Based on user's input of project name and a brief description, you can choose the best option from the following (**but on do if user has not specified of, told you to decide**):
+    - Ecosystem
+    - Category
+    - Funding Type
+    - Category
 
-3. If the user provides answers in bulk or out of order:
+4. Wait for the user's response to each question before proceeding to the next.
+
+5. If the user provides answers in bulk or out of order:
    - Normalize the order.
    - Present the answers in a clear, structured format.
    - Confirm understanding before proceeding.

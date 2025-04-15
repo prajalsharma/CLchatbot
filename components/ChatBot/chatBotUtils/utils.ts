@@ -12,9 +12,9 @@ interface Grant {
 }
 
 export const print_details_on_console = async (
-  ecosystem: string,
-  category: string,
-  fundingType: string,
+  ecosystem: string[],
+  category: string[],
+  fundingType: string[],
   fundingAmount: string,
   projectDescription: string
 ): Promise<Grant[] | undefined> => {
@@ -58,36 +58,56 @@ export const print_details_on_console = async (
 };
 
 const handleConsole = async (
-  userFields: Record<string, string>
+  userFields: Record<string, string | string[]>
 ): Promise<Grant[] | undefined> => {
-  console.log("User Fields:", userFields);
+  const tagEmbeddings = await loadTagEmbeddings();
+  const userEmbeddings: Record<string, number[]> = {};
+
+  for (const field in userFields) {
+    const value = userFields[field];
+
+    // ❌ Skip non-string and non-string-array fields
+    if (
+      typeof value !== "string" &&
+      (!Array.isArray(value) || value.some((v) => typeof v !== "string"))
+    ) {
+      console.warn(`⚠️ Skipping non-embeddable field: ${field}`, value);
+      continue;
+    }
+
+    const values = Array.isArray(value) ? value : [value];
+    const embeddings: number[][] = [];
+
+    for (const val of values) {
+      const key = val.trim(); // Safe now, we checked above
+
+      if (tagEmbeddings[key]) {
+        embeddings.push(tagEmbeddings[key]);
+      } else {
+        const res = await fetch("/api/embed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: key }),
+        });
+
+        const { embedding } = await res.json();
+        embeddings.push(embedding);
+      }
+    }
+
+    const avgEmbedding = averageVectors(embeddings);
+    userEmbeddings[field] = avgEmbedding;
+  }
+
+  console.log("✅ User Field-wise Embeddings:", userEmbeddings);
 
   try {
-    const userEmbeddings: Record<string, number[]> = {};
-
-    for (const field in userFields) {
-      const res = await fetch("/api/embed", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: userFields[field] || "" }),
-      });
-
-      const { embedding } = await res.json();
-      userEmbeddings[field] = embedding;
-    }
-
-    console.log("✅ User Field-wise Embeddings:", userEmbeddings);
-
-    try {
-      const embeddedGrants = await loadEmbeddedGrants();
-      const matches = findTopMatches(userEmbeddings, embeddedGrants);
-      console.log("🎯 Top matches:", matches);
-      return matches;
-    } catch (error) {
-      console.error("❌ Error loading grants or matching:", error);
-    }
-  } catch (err) {
-    console.error("❌ Error getting embeddings:", err);
+    const embeddedGrants = await loadEmbeddedGrants();
+    const matches = findTopMatches(userEmbeddings, embeddedGrants);
+    console.log("🎯 Top matches:", matches);
+    return matches;
+  } catch (error) {
+    console.error("❌ Error loading grants or matching:", error);
   }
 };
 
@@ -152,4 +172,34 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 
   if (magA === 0 || magB === 0) return 0;
   return dotProduct / (magA * magB);
+}
+
+function averageVectors(vectors: number[][]): number[] {
+  if (vectors.length === 0) return [];
+
+  const length = vectors[0].length;
+
+  for (const vec of vectors) {
+    if (vec.length !== length) {
+      throw new Error("Vectors must be of same length");
+    }
+  }
+
+  const sum = new Array(length).fill(0);
+
+  for (const vec of vectors) {
+    for (let i = 0; i < length; i++) {
+      sum[i] += vec[i];
+    }
+  }
+
+  return sum.map((val) => val / vectors.length);
+}
+
+async function loadTagEmbeddings(): Promise<Record<string, number[]>> {
+  const response = await fetch("/tag_embeddings.json");
+  if (!response.ok) {
+    throw new Error("Failed to load tag embeddings");
+  }
+  return await response.json();
 }
