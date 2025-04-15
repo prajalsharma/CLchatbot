@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { RotateCcw, Send } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import Markdown from "react-markdown";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { print_details_on_console } from "./chatBotUtils/utils";
 
 type MessageType =
@@ -144,10 +145,7 @@ export default function ChatbotContainer() {
                 details.fundingAmount,
                 details.projectDescription
               );
-              console.log(
-                "final response from print_details_on_console:",
-                response
-              );
+              console.log("final response from print_details_on_console:", response);
               try {
                 console.log("Sending tool_outputs:", {
                   threadId,
@@ -175,17 +173,13 @@ export default function ChatbotContainer() {
               }
               if (response && response.length > 0) {
                 // filter grants based on similarity (less than 0.6)
-                const filteredGrants = response.filter(
-                  (grant) => grant.similarity >= 0.6
-                );
+                const filteredGrants = response.filter((grant) => grant.similarity >= 0.6);
 
                 if (filteredGrants.length > 0) {
                   const formattedGrants = filteredGrants.map((grant) => ({
-                    grantProgramName:
-                      grant.original.grantProgramName || "Unknown Grant",
+                    grantProgramName: grant.original.grantProgramName || "Unknown Grant",
                     ecosystem: grant.original.ecosystem || "Various",
-                    description:
-                      grant.original.description || "No description available",
+                    description: grant.original.description || "No description available",
                     fundingType: grant.original.fundingType || "Not specified",
                     maxFunding: grant.original.maxFunding || "Not specified",
                     minFunding: grant.original.minFunding || "Not specified",
@@ -281,29 +275,26 @@ export default function ChatbotContainer() {
 
   return (
     <div className="bg-[#121C38] text-white p-6 rounded-xl shadow-lg border border-[#1F2A50] w-full lg:max-w-md text-center lg:text-left">
-      <h2 className="text-xl font-bold text-[#EAEAEA]">
-        AI Grant Matcher Tool
-      </h2>
+      <h2 className="text-xl font-bold text-[#EAEAEA]">AI Grant Matcher Tool</h2>
       <p className="text-sm text-[#A1B1E1] mt-2">
-        Our AI assistant will match your project with the ideal grant
-        opportunity.
+        Our AI assistant will match your project with the ideal grant opportunity.
       </p>
       {!isOpen && (
         <p className="mt-4 text-[#EAEAEA] bg-[#1A2B50] p-3 rounded-lg border border-[#253B6E]">
-          Hello! I'm your AI grant matcher assistant. Enter your project details
-          and I'll help you find the perfect grant opportunities.
+          Hello! I'm your AI grant matcher assistant. Enter your project details and I'll help you
+          find the perfect grant opportunities.
         </p>
       )}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button
             onClick={() => setIsOpen(true)}
-            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all"
-          >
+            className="w-full mt-4 bg-gradient-to-r from-[#253B6E] to-[#1A2B50] text-white flex items-center gap-2 border border-[#3D5A99] hover:bg-[#1A2B50] hover:border-[#58A6FF] transition-all">
             Find Grants
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-[480px] p-0 bg-[#121C38] text-white border-l border-[#1F2A50] flex flex-col">
+        <SheetContent className="w-full sm:max-w-[480px] p-0 bg-[#121C38] text-white border-l border-[#1F2A50] flex flex-col outline-none">
+          <SheetTitle className="sr-only">Assistant</SheetTitle>
           <div className="p-4 flex justify-between items-center border-b border-[#1F2A50]">
             <h2 className="text-lg font-semibold text-[#EAEAEA]">
               <img src="/logo.png" className="w-44" alt="AI Grant Matcher" />
@@ -317,42 +308,31 @@ export default function ChatbotContainer() {
                     {msg.grants.map((grant, i) => (
                       <div
                         key={`grant-${idx}-${i}`}
-                        className="p-4 bg-[#1A2B50] border border-[#253B6E] rounded-lg shadow-sm text-[#EAEAEA]"
-                      >
+                        className="p-4 bg-[#1A2B50] border border-[#253B6E] rounded-lg shadow-sm text-[#EAEAEA] text-sm">
                         <h3 className="font-bold text-lg text-[#A1B1E1]">
                           {grant.grantProgramName}
                         </h3>
                         <div className="mt-2 space-y-1">
                           <p>
-                            <strong className="text-[#A1B1E1]">
-                              Ecosystem:
-                            </strong>{" "}
-                            {grant.ecosystem}
+                            <strong className="text-[#A1B1E1]">Ecosystem:</strong> {grant.ecosystem}
                           </p>
                           {grant.fundingTopics && (
                             <p>
-                              <strong className="text-[#A1B1E1]">
-                                Topics:
-                              </strong>{" "}
+                              <strong className="text-[#A1B1E1]">Topics:</strong>{" "}
                               {grant.fundingTopics}
                             </p>
                           )}
                           <p>
-                            <strong className="text-[#A1B1E1]">
-                              Description:
-                            </strong>{" "}
+                            <strong className="text-[#A1B1E1]">Description:</strong>{" "}
                             {grant.description}
                           </p>
                           <p>
-                            <strong className="text-[#A1B1E1]">
-                              Funding Type:
-                            </strong>{" "}
+                            <strong className="text-[#A1B1E1]">Funding Type:</strong>{" "}
                             {grant.fundingType}
                           </p>
                           <p className="flex flex-wrap gap-1">
                             <strong className="text-[#A1B1E1]">Funding:</strong>{" "}
-                            {grant.minFunding &&
-                            grant.minFunding !== "Not specified" ? (
+                            {grant.minFunding && grant.minFunding !== "Not specified" ? (
                               <span>
                                 {grant.minFunding} - {grant.maxFunding}
                               </span>
@@ -362,16 +342,11 @@ export default function ChatbotContainer() {
                           </p>
                           {grant.status && (
                             <p>
-                              <strong className="text-[#A1B1E1]">
-                                Status:
-                              </strong>{" "}
+                              <strong className="text-[#A1B1E1]">Status:</strong>{" "}
                               <span
                                 className={`${
-                                  grant.status === "Active"
-                                    ? "text-green-400"
-                                    : "text-yellow-400"
-                                }`}
-                              >
+                                  grant.status === "Active" ? "text-green-400" : "text-yellow-400"
+                                }`}>
                                 {grant.status}
                               </span>
                             </p>
@@ -380,8 +355,7 @@ export default function ChatbotContainer() {
                             href={grant.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[#58A6FF] hover:text-[#A1B1E1] underline mt-2 inline-block"
-                          >
+                            className="text-[#58A6FF] hover:text-[#A1B1E1] underline mt-2 inline-block">
                             Visit Website
                           </a>
                         </div>
@@ -393,18 +367,14 @@ export default function ChatbotContainer() {
               return (
                 <div
                   key={`message-${idx}`}
-                  className={`text-sm ${
-                    msg.role === "user" ? "text-right" : "text-left"
-                  }`}
-                >
+                  className={`text-sm ${msg.role === "user" ? "text-right" : "text-left"}`}>
                   <div
-                    className={`inline-block px-3 py-2 rounded-xl shadow-lg ${
+                    className={`inline-block px-3 py-2 rounded-xl shadow-lg prose prose-invert text-sm ${
                       msg.role === "user"
                         ? "bg-[#3D5A99] text-white rounded-tr-none"
                         : "bg-[#1A2B50] text-[#EAEAEA] rounded-tl-none"
-                    }`}
-                  >
-                    {msg.content}
+                    }`}>
+                    <Markdown>{msg.content}</Markdown>
                   </div>
                 </div>
               );
@@ -420,9 +390,7 @@ export default function ChatbotContainer() {
                         <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce [animation-delay:-0.15s]" />
                         <span className="w-2 h-2 bg-[#EAEAEA] rounded-full animate-bounce" />
                       </span>
-                      <span className="text-xs text-[#A1B1E1]">
-                        This may take a moment
-                      </span>
+                      <span className="text-xs text-[#A1B1E1]">This may take a moment</span>
                     </div>
                   ) : (
                     <span className="flex items-center gap-2">
@@ -452,11 +420,8 @@ export default function ChatbotContainer() {
             />
             <Button
               onClick={handleSendMessage}
-              disabled={
-                isLoading || fetchingGrants || !prompt.trim() || !threadId
-              }
-              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-[#253B6E] transition-all [&_svg]:size-5 flex items-center justify-center"
-            >
+              disabled={isLoading || fetchingGrants || !prompt.trim() || !threadId}
+              className="bg-[#3D5A99] text-white rounded-lg px-4 hover:bg-[#253B6E] transition-all [&_svg]:size-5 flex items-center justify-center">
               {isLoading || fetchingGrants ? (
                 <RotateCcw className="animate-[spin_1s_linear_infinite_reverse]" />
               ) : (
