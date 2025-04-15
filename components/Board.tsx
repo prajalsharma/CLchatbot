@@ -30,19 +30,11 @@ interface Grant {
   searchFundingType?: string;
 }
 
-const API_KEY = process.env.VITE_API_KEY as string;
-const SHEET_ID = process.env.VITE_SHEET_ID as string;
-const RANGE = process.env.VITE_RANGE as string;
-
 const Board = () => {
   const [selectedEcosystems, setSelectedEcosystems] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [selectedFundingTopics, setSelectedFundingTopics] = useState<string[]>(
-    []
-  );
-  const [selectedFundingTypes, setSelectedFundingTypes] = useState<string[]>(
-    []
-  );
+  const [selectedFundingTopics, setSelectedFundingTopics] = useState<string[]>([]);
+  const [selectedFundingTypes, setSelectedFundingTypes] = useState<string[]>([]);
   const [selectedSortBy, setSelectedSortBy] = useState<string[]>([]);
   const [grantPrograms, setGrantPrograms] = useState<Grant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,13 +63,10 @@ const Board = () => {
       if (data.values && data.values.length > 1) {
         const headers = data.values[0];
         const formattedData = data.values.slice(1).map((row: string[]) => {
-          const grant = headers.reduce(
-            (acc: any, header: string, index: number) => {
-              acc[header] = row[index] || "";
-              return acc;
-            },
-            {}
-          );
+          const grant = headers.reduce((acc: any, header: string, index: number) => {
+            acc[header] = row[index] || "";
+            return acc;
+          }, {});
 
           return {
             ...grant,
@@ -107,15 +96,11 @@ const Board = () => {
   const filteredAndSortedGrants = useMemo(() => {
     let filtered = grantPrograms.filter((grant) => {
       return (
-        (selectedEcosystems.length === 0 ||
-          selectedEcosystems.includes(grant.ecosystem)) &&
-        (selectedStatuses.length === 0 ||
-          selectedStatuses.includes(grant.status)) &&
+        (selectedEcosystems.length === 0 || selectedEcosystems.includes(grant.ecosystem)) &&
+        (selectedStatuses.length === 0 || selectedStatuses.includes(grant.status)) &&
         (selectedFundingTopics.length === 0 ||
           grant.searchFundingTopics?.some((topic) =>
-            selectedFundingTopics
-              .map((t) => t.toLowerCase().replace(/\s+/g, ""))
-              .includes(topic)
+            selectedFundingTopics.map((t) => t.toLowerCase().replace(/\s+/g, "")).includes(topic)
           )) &&
         (selectedFundingTypes.length === 0 ||
           selectedFundingTypes
@@ -132,9 +117,8 @@ const Board = () => {
             .filter(Boolean)
             .some(
               (field) =>
-                (field?.toLowerCase() ?? "").includes(
-                  searchQuery.toLowerCase()
-                ) || new RegExp(`\\b${searchQuery}`, "i").test(field ?? "")
+                (field?.toLowerCase() ?? "").includes(searchQuery.toLowerCase()) ||
+                new RegExp(`\\b${searchQuery}`, "i").test(field ?? "")
             ))
       );
     });
@@ -214,8 +198,7 @@ const Board = () => {
               <Button
                 key={criteria}
                 className={`h-auto bg-[#151226]/70 text-white hover:bg-[#151226] ${
-                  selectedSortBy.includes(criteria) &&
-                  "bg-[#00bbfc] hover:bg-[#00bbfc]/50"
+                  selectedSortBy.includes(criteria) && "bg-[#00bbfc] hover:bg-[#00bbfc]/50"
                 }`}
                 onClick={() =>
                   setSelectedSortBy((prev) => {
@@ -225,8 +208,7 @@ const Board = () => {
 
                     return [...prev, criteria];
                   })
-                }
-              >
+                }>
                 {criteria === "mostRecent" ? "Most Recent" : "Funding"}
               </Button>
             ))}
@@ -240,8 +222,7 @@ const Board = () => {
               setSelectedFundingTypes([]);
               setSelectedSortBy([]);
               setSearchQuery("");
-            }}
-          >
+            }}>
             <RotateCcw />
             Reset Filters
           </Button>
@@ -252,24 +233,19 @@ const Board = () => {
         {isLoading ? (
           <div className="text-center">Loading...</div>
         ) : paginatedGrants.length === 0 ? (
-          <div className="text-center text-white text-xl py-6">
-            No grants found.
-          </div>
+          <div className="text-center text-white text-xl py-6">No grants found.</div>
         ) : (
-          paginatedGrants.map((grant) => (
-            <GrantCard key={grant.id} grant={grant} />
-          ))
+          paginatedGrants.map((grant) => <GrantCard key={grant.id} grant={grant} />)
         )}
       </div>
-      <div className="flex justify-center items-center gap-4 mt-4">
+      <div className="flex justify-center items-center gap-4 mt-4 flex-wrap">
         <button
           className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
           onClick={() => {
             setCurrentPage(1);
             window.scrollTo({ top: 100 });
           }}
-          disabled={currentPage === 1}
-        >
+          disabled={currentPage === 1}>
           First
         </button>
 
@@ -279,21 +255,17 @@ const Board = () => {
             setCurrentPage((prev) => Math.max(prev - 1, 1));
             window.scrollTo({ top: 100 });
           }}
-          disabled={currentPage === 1}
-        >
+          disabled={currentPage === 1}>
           Previous
         </button>
-        <span className="text-white bg-[#151226] rounded px-4 py-2">
-          {currentPage}
-        </span>
+        <span className="text-white bg-[#151226] rounded px-4 py-2">{currentPage}</span>
         <button
           className="bg-[#151226]/70 text-white px-4 py-2 rounded disabled:opacity-50 hover:opacity-80 transition"
           onClick={() => {
             setCurrentPage((prev) => Math.min(prev + 1, totalPages));
             window.scrollTo({ top: 100 });
           }}
-          disabled={currentPage === totalPages}
-        >
+          disabled={currentPage === totalPages}>
           Next
         </button>
         <button
@@ -302,8 +274,7 @@ const Board = () => {
             setCurrentPage(totalPages);
             window.scrollTo({ top: 100 });
           }}
-          disabled={currentPage === totalPages}
-        >
+          disabled={currentPage === totalPages}>
           Last
         </button>
       </div>
