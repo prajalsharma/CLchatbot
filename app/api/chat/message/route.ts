@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
       if (activeRun) {
         return NextResponse.json(
-          { error: "Cannot send a new message while a run is in progress" },
+          { error: "Please wait to complete the queued tasks." },
           { status: 409 }
         );
       }
