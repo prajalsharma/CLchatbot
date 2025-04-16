@@ -1,3 +1,5 @@
+// this script is used to embed the tag labels using the universal sentence encoder
+
 /** 
 
 import "@tensorflow/tfjs-node";
@@ -11,7 +13,7 @@ const ecosystems = [
   { value: "Cartesi", label: "Cartesi" },
   { value: "Cosmos", label: "Cosmos" },
   { value: "Ethereum", label: "Ethereum" },
-  { value: "EU", label: "European Union" },
+  { value: "European Union", label: "European Union" },
   { value: "Filecoin", label: "Filecoin" },
   { value: "Fuel", label: "Fuel" },
   { value: "Hedera", label: "Hedera" },
@@ -24,7 +26,7 @@ const ecosystems = [
   { value: "Ripple", label: "Ripple" },
   { value: "Stellar", label: "Stellar" },
   { value: "XION", label: "XION" },
-  { value: "Dfinity", label: "Difinity" },
+  { value: "Dfinity", label: "Dfinity" },
   { value: "TON", label: "TON" },
   { value: "Solana", label: "Solana" },
   { value: "Starknet", label: "Starknet" },
@@ -33,47 +35,41 @@ const ecosystems = [
 ];
 
 const fundingTypes = [
-  {
-    value: "AI-BlockchainResearchGrants",
-    label: "AI-Blockchain Research Grants",
-  },
+  { value: "Open Grants", label: "Open Grants" },
+  { value: "Quadratic Funding", label: "Quadratic Funding" },
+  { value: "Retroactive Grants", label: "Retroactive Grants" },
+  { value: "Hackathon Grants", label: "Hackathon Grants" },
+  { value: "Incubation and Acceleration", label: "Incubation and Acceleration" },
+  { value: "Matching Grants", label: "Matching Grants" },
   { value: "Bounty-Based", label: "Bounty-Based" },
-  { value: "HackathonGrants", label: "Hackathon Grants" },
-  { value: "IncubationAcceleration", label: "Incubation & Acceleration" },
-  { value: "MatchingGrants", label: "Matching Grants" },
-  { value: "OpenGrants", label: "Open Grants" },
-  { value: "QuadraticFunding", label: "Quadratic Funding" },
-  { value: "RetroactiveGrants", label: "Retroactive Grants" },
-  {
-    value: "StakingLiquidityIncentives",
-    label: "Staking & Liquidity Incentives",
-  },
   { value: "Tender", label: "Tender" },
+  { value: "AI-Blockchain Research Grants", label: "AI-Blockchain Research Grants" },
+  { value: "Staking and Liquidity Incentives", label: "Staking and Liquidity Incentives" },
 ];
 
 const fundingTopics = [
   { value: "AI", label: "AI" },
-  { value: "AIAgents", label: "AIAgents" },
-  { value: "Bugs", label: "Bugs" },
+  { value: "AI Agents", label: "AI Agents" },
   { value: "CrossChain", label: "CrossChain" },
   { value: "DAOs", label: "DAOs" },
   { value: "Data & Oracles", label: "Data & Oracles" },
   { value: "DeFi", label: "DeFi" },
   { value: "DePIN", label: "DePIN" },
-  { value: "DevTooling", label: "Developer Tooling" },
-  { value: "Digital Euro", label: "Digital Euro" },
+  { value: "Developer Tooling", label: "Developer Tooling" },
   { value: "Education", label: "Education" },
   { value: "Events", label: "Events" },
-  { value: "Gaming", label: "Gaming & Metaverse" },
-  { value: "Infra", label: "Infrastructure" },
-  { value: "NFTs", label: "NFTs & Creator Economy" },
+  { value: "Gaming & Metaverse", label: "Gaming & Metaverse" },
+  { value: "Infrastructure", label: "Infrastructure" },
+  { value: "NFTs & Creator Economy", label: "NFTs & Creator Economy" },
   { value: "Privacy & Security", label: "Privacy & Security" },
-  { value: "PublicGoods", label: "Public Goods & Open Source" },
-  { value: "RWAs", label: "Real-World Assets (RWAs)" },
+  { value: "Public Goods & Open Source", label: "Public Goods & Open Source" },
+  { value: "Real-World Assets (RWAs)", label: "Real-World Assets (RWAs)" },
   { value: "Social & Community", label: "Social & Community" },
   { value: "Stablecoins & Payments", label: "Stablecoins & Payments" },
   { value: "Sustainability", label: "Sustainability" },
-  { value: "ZK", label: "Zero Knowledge (ZK)" },
+  { value: "Zero Knowledge (ZK)", label: "Zero Knowledge (ZK)" },
+  { value: "Bugs", label: "Bugs" },
+  { value: "Digital Euro", label: "Digital Euro" },
 ];
 
 async function embedTagLabels() {

@@ -140,6 +140,8 @@ export default function ChatbotContainer() {
                 details.fundingAmount,
                 details.projectDescription
               );
+
+              console.log("final response from print_details_on_console:", response);
               try {
                 await fetch("/api/chat/toolOutput", {
                   method: "POST",
