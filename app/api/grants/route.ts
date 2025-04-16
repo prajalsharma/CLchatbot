@@ -15,7 +15,6 @@ export async function GET() {
 
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
 
-  console.log("Fetching data from Google Sheets:", url);
   try {
     const response = await fetch(url);
     if (!response.ok) {

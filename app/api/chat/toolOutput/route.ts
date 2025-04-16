@@ -11,19 +11,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { thread_id, message, tool_outputs } = body;
-    console.log(thread_id, message, tool_outputs);
 
     if (tool_outputs) {
       const { run_id, tool_call_id, results } = tool_outputs;
-      console.log(run_id, tool_call_id, results);
-      console.log(
-        "Received results:",
-        Array.isArray(results),
-        results?.length,
-        results
-      );
 
-      // print in pretty format
       if (Array.isArray(results) && results.length > 0) {
         const simplifiedGrants = results.slice(0, 3).map((grant: any) => ({
           name: grant.grantProgramName,
@@ -41,7 +32,6 @@ export async function POST(req: Request) {
             },
           ],
         });
-        console.log("resumed");
       } else {
         console.warn("❗ tool_outputs.results is empty or not an array.");
         await openai.beta.threads.runs.submitToolOutputs(thread_id, run_id, {
@@ -53,8 +43,6 @@ export async function POST(req: Request) {
           ],
         });
       }
-
-      console.log("resumed");
     } else {
       // Step 2: User sends new message → add to thread
       await openai.beta.threads.messages.create(thread_id, {

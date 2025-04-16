@@ -54,7 +54,6 @@ export default function ChatbotContainer() {
           method: "POST",
         });
         const data: { threadId: string } = await res.json();
-        console.log("threadId:", data.threadId);
         setThreadId(data.threadId);
       } catch (err) {
         console.error("Failed to create thread:", err);
@@ -102,7 +101,6 @@ export default function ChatbotContainer() {
       const text = await res.text();
       try {
         const data = JSON.parse(text);
-        console.log("Parsed data:", data);
         if (res.status === 409) {
           // Handle the case where a run is already in progress
           setMessages((prev) => [
@@ -118,11 +116,8 @@ export default function ChatbotContainer() {
         }
         if (data.tool_call_required) {
           const toolCall = data.tool_call;
-          console.log("Tool call from Assistant:", toolCall);
           const runId = toolCall.run_id;
           const toolCallId = toolCall.tool_call_id;
-          console.log("Run ID:", runId);
-          console.log("Tool Call ID:", toolCallId);
           if (toolCall.name === "handleUserDetails") {
             const details = toolCall.arguments.details;
             const runId = toolCall.run_id;
@@ -146,12 +141,6 @@ export default function ChatbotContainer() {
                 details.projectDescription
               );
               try {
-                console.log("Sending tool_outputs:", {
-                  threadId,
-                  runId,
-                  toolCallId,
-                  results: response,
-                });
                 await fetch("/api/chat/toolOutput", {
                   method: "POST",
                   headers: {
@@ -166,9 +155,8 @@ export default function ChatbotContainer() {
                     },
                   }),
                 });
-                console.log("Tool outputs submitted successfully");
               } catch (error) {
-                console.log("error in submitting tool outputs:", error);
+                console.error("error in submitting tool outputs:", error);
               }
               if (response && response.length > 0) {
                 // filter grants based on similarity (less than 0.6)
@@ -245,7 +233,6 @@ export default function ChatbotContainer() {
             }
           }
         } else {
-          console.log("Assistant Reply:", data.reply);
           const formattedReply = data.reply.replace(/\n\n+/g, "\n\n").trim();
           setMessages((prev) => [
             ...prev,

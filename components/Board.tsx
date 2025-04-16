@@ -52,7 +52,6 @@ const Board = () => {
           "Content-Type": "application/json",
         },
       });
-      console.log("Response:", response);
 
       if (!response.ok) {
         throw new Error("Failed to fetch data");

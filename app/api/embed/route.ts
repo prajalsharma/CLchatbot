@@ -12,7 +12,6 @@ async function loadModel() {
     await tf.setBackend("cpu");
     await tf.ready();
     model = await use.load();
-    console.log("✅ USE model loaded with CPU backend");
   }
   return model;
 }
@@ -31,7 +30,6 @@ export async function POST(req: Request) {
     }
 
     const model = await loadModel();
-    console.log("📦 Input to embedding model:", textInput);
     const embeddings = await model.embed([textInput]);
     const array = await embeddings.array();
     const embedding = array[0];

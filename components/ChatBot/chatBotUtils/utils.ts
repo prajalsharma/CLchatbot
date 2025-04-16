@@ -18,13 +18,6 @@ export const handleUserDetails = async (
   fundingAmount: string,
   projectDescription: string
 ): Promise<Grant[] | undefined> => {
-  console.log(
-    ecosystem,
-    category,
-    fundingType,
-    fundingAmount,
-    projectDescription
-  );
 
   const detailsObject = {
     ecosystem,
@@ -34,7 +27,6 @@ export const handleUserDetails = async (
     projectDescription,
   };
 
-  console.log("detailsObject is", detailsObject);
 
   const userQueryString = Object.entries(detailsObject)
     .map(([key, value]) => `${capitalize(key)}: ${value}`)
@@ -43,8 +35,6 @@ export const handleUserDetails = async (
   function capitalize(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
-
-  console.log("Details of user from chatgpt:\n" + userQueryString);
 
   const top5matches = await handleChat({
     ecosystem,
@@ -99,12 +89,10 @@ const handleChat = async (
     userEmbeddings[field] = avgEmbedding;
   }
 
-  console.log("✅ User Field-wise Embeddings:", userEmbeddings);
 
   try {
     const embeddedGrants = await loadEmbeddedGrants();
     const matches = findTopMatches(userEmbeddings, embeddedGrants);
-    console.log("🎯 Top matches:", matches);
     return matches;
   } catch (error) {
     console.error("❌ Error loading grants or matching:", error);
