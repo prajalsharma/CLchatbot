@@ -69,7 +69,7 @@ export default function ChatbotContainer() {
         {
           role: "assistant",
           content:
-            "Hello! I'm your AI grant matcher assistant. I'll help you find the perfect grant opportunities for your project. Tell me about your project, and I'll suggest some grants that might be a good fit.",
+            "Hello! I'm your AI grant matcher assistant. I'll help you find the perfect grant opportunities for your project.",
           type: "text",
         },
       ]);
