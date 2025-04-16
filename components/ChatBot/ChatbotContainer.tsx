@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { RotateCcw, Send } from "lucide-react";
 import Markdown from "react-markdown";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "../ui/sheet";
-import { print_details_on_console } from "./chatBotUtils/utils";
+import { handleUserDetails } from "./chatBotUtils/utils";
 
 type MessageType =
   | {
@@ -77,7 +77,7 @@ export default function ChatbotContainer() {
     }
   }, [isOpen, hasShownGreeting, threadId]);
 
-  const handleSendMessage = async () => {
+  const handleChat = async () => {
     if (!prompt.trim() || !threadId || isLoading) return;
     const userMessage: MessageType = {
       role: "user",
@@ -123,7 +123,7 @@ export default function ChatbotContainer() {
           const toolCallId = toolCall.tool_call_id;
           console.log("Run ID:", runId);
           console.log("Tool Call ID:", toolCallId);
-          if (toolCall.name === "print_details_on_console") {
+          if (toolCall.name === "handleUserDetails") {
             const details = toolCall.arguments.details;
             const runId = toolCall.run_id;
             const toolCallId = toolCall.tool_call_id;
@@ -138,16 +138,12 @@ export default function ChatbotContainer() {
             ]);
             setFetchingGrants(true);
             try {
-              const response = await print_details_on_console(
+              const response = await handleUserDetails(
                 details.ecosystem,
                 details.category,
                 details.fundingType,
                 details.fundingAmount,
                 details.projectDescription
-              );
-              console.log(
-                "final response from print_details_on_console:",
-                response
               );
               try {
                 console.log("Sending tool_outputs:", {
@@ -469,13 +465,13 @@ export default function ChatbotContainer() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  handleSendMessage();
+                  handleChat();
                 }
               }}
               disabled={isLoading || fetchingGrants || !threadId}
             />
             <Button
-              onClick={handleSendMessage}
+              onClick={handleChat}
               disabled={
                 isLoading || fetchingGrants || !prompt.trim() || !threadId
               }

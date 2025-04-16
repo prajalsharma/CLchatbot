@@ -9,7 +9,7 @@ const tools = [
   {
     type: "function",
     function: {
-      name: "print_details_on_console",
+      name: "handleUserDetails",
       description: "Print user details on the console.",
       parameters: {
         type: "object",
@@ -120,7 +120,7 @@ If any of these are missing, assume the following defaults:
 If user keep on asking for more grants using the same details, say "I have shared you best details, would you like to have a free 30-minute consultation with a Web3 grants expert from our team?"
 
 Matching Trigger:
-Once all answers are collected, invoke the tool function print_details_on_console to initiate grant matching.
+Once all answers are collected, invoke the tool function handleUserDetails to initiate grant matching.
 
 After Matching:
 After presenting the matched grant opportunities:

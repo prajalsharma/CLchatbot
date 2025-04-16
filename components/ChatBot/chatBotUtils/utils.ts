@@ -11,7 +11,7 @@ interface Grant {
   [key: string]: any;
 }
 
-export const print_details_on_console = async (
+export const handleUserDetails = async (
   ecosystem: string[],
   category: string[],
   fundingType: string[],
@@ -46,7 +46,7 @@ export const print_details_on_console = async (
 
   console.log("Details of user from chatgpt:\n" + userQueryString);
 
-  const top5matches = await handleConsole({
+  const top5matches = await handleChat({
     ecosystem,
     fundingTopics: category,
     fundingType,
@@ -57,7 +57,7 @@ export const print_details_on_console = async (
   return top5matches;
 };
 
-const handleConsole = async (
+const handleChat = async (
   userFields: Record<string, string | string[]>
 ): Promise<Grant[] | undefined> => {
   const tagEmbeddings = await loadTagEmbeddings();
